@@ -142,12 +142,13 @@ Panel {
     if (selectedProviderId !== "") return
     if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
   }
+  // Opening the panel must not fetch: data comes from the fixed-interval
+  // timer in Service.qml and from explicit user Refresh clicks.
   onOpenedChanged: if (opened) {
     cursorActive = false
     nowMs = Date.now()
     if (panelFlick) panelFlick.contentY = 0
     if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
-    usage.refresh("")
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
   onSettingsChanged: root.reloadSettingsModel()
