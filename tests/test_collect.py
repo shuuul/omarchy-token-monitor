@@ -8,7 +8,7 @@ collect = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collect)
 
 text = """
-Signed in as zetarylee@gmail.com (shuuul)
+Signed in as user@example.com (example)
 **Amp Free:** 99% remaining today (resets daily)
 **Amp Megawatt Subscription:** 95% other usage and 97% orb usage remaining - resets upon renewal in 6 days
 **Individual credits:** $3.23 remaining
@@ -49,7 +49,7 @@ spaces = {
                 "spaceId": "space-1",
                 "value": {
                     "id": "space-1",
-                    "name": "shuuul",
+                    "name": "Example",
                     "plan_type": "team",
                     "subscription_tier": "business",
                 },
@@ -61,7 +61,7 @@ space_id, email, tier, name = collect.notion_account(spaces)
 assert space_id == "space-1"
 assert email == "user@example.com"
 assert tier == "business"
-assert name == "shuuul"
+assert name == "Example"
 used, reset_at = collect.parse_grok_grpc(bytes.fromhex("0000000000"))
 assert used == 0.0
 assert reset_at is None
