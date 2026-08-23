@@ -91,7 +91,11 @@ assert.strictEqual(model.barIconId(rows, false), "cursor")
 assert.ok(model.barTooltip(rows, false).includes("Cursor 91%"))
 assert.strictEqual(model.formatCredits(112.4, "credits"), "112.4 credits")
 assert.strictEqual(model.formatMoney(1.04), "$1.04")
-assert.strictEqual(model.heroMeta(codex), "plus")
+assert.strictEqual(model.prettyPlan("codex", "prolite"), "Pro")
+assert.strictEqual(model.prettyPlan("kimi", "LEVEL_INTERMEDIATE"), "Moderato")
+assert.strictEqual(model.prettyPlan("cursor", "pro_plus"), "Pro+")
+assert.strictEqual(model.prettyPlan("zed", "zed_student"), "Student")
+assert.strictEqual(model.heroMeta(codex), "Plus · user@example.com")
 assert.strictEqual(
   model.formatDuration(2 * 3600 * 1000 + 12 * 60 * 1000),
   "2h 12m",

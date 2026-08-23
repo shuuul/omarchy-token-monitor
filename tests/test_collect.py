@@ -27,6 +27,17 @@ assert row["error"]["message"] == "x"
 assert collect.kimi_token_fresh({"expires_at": 1}, now=100) is False
 assert collect.kimi_token_fresh({"expires_at": 200}, now=100) is True
 assert [region["name"] for region in collect.KIMI_REGIONS] == ["kimi.com", "kimi.ai"]
+merged = collect.merge_kimi_rows([
+    {
+        "source": "cli",
+        "usage": {
+            "identity": {"plan": "LEVEL_INTERMEDIATE", "accountOrganization": "kimi.com"},
+            "primary": {"usedPercent": 0, "label": "5-hour · kimi.com"},
+        },
+    }
+])
+assert "LEVEL_INTERMEDIATE" in merged["usage"]["loginMethod"]
+assert "kimi.com" in merged["usage"]["loginMethod"]
 source = (ROOT / "collect.py").read_text()
 assert "WHERE name IN" in source
 assert "auth.kimi.com/api/oauth/token" in source

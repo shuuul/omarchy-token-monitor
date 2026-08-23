@@ -271,8 +271,13 @@ def fetch_codex() -> dict:
             extras.append({"id": extra.get("id") or "extra-weekly", "title": secondary["label"], "window": secondary})
     usage = {
         "accountEmail": data.get("email"),
-        "loginMethod": data.get("plan_type"),
-        "identity": {"accountEmail": data.get("email"), "loginMethod": data.get("plan_type"), "providerID": "codex"},
+        "loginMethod": data.get("plan_type") or "",
+        "identity": {
+            "accountEmail": data.get("email"),
+            "plan": data.get("plan_type") or "",
+            "loginMethod": data.get("plan_type") or "",
+            "providerID": "codex",
+        },
         "primary": map_window(rate.get("primary_window"), "Session"),
         "secondary": map_window(rate.get("secondary_window"), "Weekly"),
         "tertiary": None,
@@ -303,8 +308,13 @@ def fetch_cursor(jars: dict) -> dict:
     cycle_end = data.get("billingCycleEnd")
     usage = {
         "accountEmail": email,
-        "loginMethod": data.get("membershipType"),
-        "identity": {"accountEmail": email, "loginMethod": data.get("membershipType"), "providerID": "cursor"},
+        "loginMethod": data.get("membershipType") or "",
+        "identity": {
+            "accountEmail": email,
+            "plan": data.get("membershipType") or "",
+            "loginMethod": data.get("membershipType") or "",
+            "providerID": "cursor",
+        },
         "primary": window(plan.get("totalPercentUsed"), None, cycle_end, "Plan"),
         "secondary": window(plan.get("autoPercentUsed"), None, cycle_end, "Cursor models"),
         "tertiary": window(plan.get("apiPercentUsed"), None, cycle_end, "Third-party"),
@@ -591,9 +601,15 @@ def kimi_usage_from_token(token: str, source: str, region: dict) -> dict:
         return window(used / limit * 100.0, minutes, block.get("resetTime"), label)
 
     site = region["name"]
+    membership = ((data.get("user") or {}).get("membership") or {}).get("level") or ""
     usage = {
-        "loginMethod": f"Kimi Code · {site}",
-        "identity": {"providerID": "kimi", "loginMethod": f"Kimi Code · {site}"},
+        "loginMethod": membership or site,
+        "identity": {
+            "providerID": "kimi",
+            "plan": membership,
+            "loginMethod": membership or site,
+            "accountOrganization": site,
+        },
         "primary": from_counts(rolling, f"5-hour · {site}", 300),
         "secondary": from_counts(weekly, f"Weekly · {site}", 10080),
         "updatedAt": iso_now(),
@@ -636,19 +652,26 @@ def try_kimi_region(jars: dict, region: dict) -> dict | None:
 def merge_kimi_rows(rows: list[dict]) -> dict:
     extras = []
     plan_parts = []
+    sites = []
     binding_source = None
     for item in rows:
         usage = item.get("usage") or {}
-        plan_parts.append(usage.get("loginMethod") or "")
+        identity = usage.get("identity") or {}
+        plan_parts.append(identity.get("plan") or usage.get("loginMethod") or "")
+        if identity.get("accountOrganization"):
+            sites.append(identity["accountOrganization"])
         for key in ("primary", "secondary", "tertiary"):
             win = usage.get(key)
             if win:
                 extras.append({"id": f"{item.get('source')}-{key}", "title": win.get("label") or key, "window": win})
         if not binding_source:
             binding_source = item.get("source")
+    plan = " + ".join(part for part in plan_parts if part)
+    if sites:
+        plan = (plan + " · " if plan else "") + " + ".join(sites)
     usage = {
-        "loginMethod": " + ".join(part for part in plan_parts if part) or "Kimi Code",
-        "identity": {"providerID": "kimi", "loginMethod": "Kimi Code"},
+        "loginMethod": plan or "Kimi Code",
+        "identity": {"providerID": "kimi", "plan": plan, "loginMethod": plan or "Kimi Code"},
         "extraRateWindows": extras,
         "updatedAt": iso_now(),
     }
@@ -748,11 +771,12 @@ def fetch_zed() -> dict:
     period = plan.get("subscription_period") or {}
     usage = {
         "accountEmail": user.get("github_login"),
-        "loginMethod": plan.get("plan_v3") or plan.get("plan"),
+        "loginMethod": plan.get("plan_v3") or plan.get("plan") or "",
         "identity": {
             "providerID": "zed",
             "accountEmail": user.get("github_login"),
-            "loginMethod": plan.get("plan_v3") or plan.get("plan"),
+            "plan": plan.get("plan_v3") or plan.get("plan") or "",
+            "loginMethod": plan.get("plan_v3") or plan.get("plan") or "",
         },
         "primary": window(used_percent, None, period.get("ended_at"), label),
         "updatedAt": iso_now(),

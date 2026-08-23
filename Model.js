@@ -357,13 +357,66 @@ function resetRemainingMs(resetAt, nowMs) {
   return ms - now
 }
 
+function prettyPlan(providerId, raw) {
+  var value = String(raw || "").trim()
+  if (value === "") return ""
+  var id = String(providerId || "")
+  var key = value.toLowerCase().replace(/[\s-]+/g, "_")
+  var maps = {
+    codex: {
+      free: "Free",
+      plus: "Plus",
+      go: "Go",
+      pro: "Pro",
+      prolite: "Pro",
+      pro_lite: "Pro",
+      team: "Team",
+      business: "Business",
+      enterprise: "Enterprise"
+    },
+    cursor: {
+      hobby: "Hobby",
+      pro: "Pro",
+      pro_student: "Pro",
+      pro_plus: "Pro+",
+      ultra: "Ultra",
+      team: "Team",
+      enterprise: "Enterprise"
+    },
+    kimi: {
+      level_free: "Free",
+      level_basic: "Andante",
+      level_intermediate: "Moderato",
+      level_advanced: "Allegretto",
+      level_professional: "Presto"
+    },
+    zed: {
+      zed_free: "Free",
+      zed_pro: "Pro",
+      zed_trial: "Trial",
+      zed_student: "Student",
+      zed_business: "Business"
+    }
+  }
+  var mapped = maps[id] && maps[id][key]
+  if (mapped) return mapped
+  if (value.indexOf("_") >= 0 || value === value.toLowerCase()) {
+    return value.split(/[_\s]+/).map(function(part) {
+      return part ? part.charAt(0).toUpperCase() + part.slice(1) : ""
+    }).join(" ")
+  }
+  return value
+}
+
 function heroMeta(provider) {
   if (!provider) return ""
   if (provider.error) return provider.error
-  if (provider.plan) return provider.plan
+  var plan = prettyPlan(provider.id, provider.plan)
+  if (plan && provider.accountEmail) return plan + " · " + provider.accountEmail
+  if (plan) return plan
   if (provider.accountEmail) return provider.accountEmail
   if (provider.source) return provider.source
-  return "Waiting for CodexBar"
+  return "Waiting for usage"
 }
 
 function clamp(value, lo, hi) {
