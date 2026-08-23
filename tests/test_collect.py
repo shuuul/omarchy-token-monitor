@@ -82,6 +82,7 @@ assert "api.kimi.ai/coding/v1/usages" in source
 assert "api.kimi.com/coding/v1/me" in source
 assert "api.kimi.ai/coding/v1/me" in source
 assert "cli-chat-proxy.grok.com/v1/settings" in source
+assert '"Weekly"' in source
 assert "accounts.x.ai/api/auth/session" in source
 assert "zed-github-account" in source
 print("collect tests passed")

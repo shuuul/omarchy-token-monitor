@@ -177,12 +177,13 @@ function errorText(value) {
 function windowTitle(label, kind, minutes) {
   var text = String(label || "").toLowerCase()
   var kindText = String(kind || "").toLowerCase()
-  if (kindText === "session" || text.indexOf("session") >= 0) return "Session"
   if (kindText === "weekly" || text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0) return "Weekly"
+  if (kindText === "session" || text.indexOf("session") >= 0) return "Session"
   if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return "Monthly"
   if (text.indexOf("day") >= 0 || text.indexOf("daily") >= 0) return "Daily"
-  if (minutes === 300) return "Session"
+  if (text.indexOf("credit") >= 0) return "Weekly"
   if (minutes === 10080) return "Weekly"
+  if (minutes === 300) return "Session"
   var plain = String(label || "").replace(/\s*\(.*\)\s*/, "").trim()
   return plain === "" ? "Limit" : plain
 }
@@ -209,8 +210,10 @@ function normalizeRateWindow(raw, label, kind) {
 function collectWindows(usage) {
   var out = []
   if (!usage || typeof usage !== "object") return out
-  var primary = normalizeRateWindow(usage.primary, "Session", "session")
-  var secondary = normalizeRateWindow(usage.secondary, "Weekly", "weekly")
+  var primaryLabel = usage.primary && usage.primary.label ? usage.primary.label : "Session"
+  var secondaryLabel = usage.secondary && usage.secondary.label ? usage.secondary.label : "Weekly"
+  var primary = normalizeRateWindow(usage.primary, primaryLabel, "")
+  var secondary = normalizeRateWindow(usage.secondary, secondaryLabel, "")
   var tertiary = normalizeRateWindow(usage.tertiary, usage.tertiary && usage.tertiary.label, "tertiary")
   if (primary) out.push(primary)
   if (secondary) out.push(secondary)
@@ -258,9 +261,9 @@ function iconWindows(provider) {
   var windows = provider && Array.isArray(provider.windows) ? provider.windows : []
   var weekly = findWindowByTitle(windows, "Weekly")
   var session = findWindowByTitle(windows, "Session")
+  if (!weekly && !session && windows.length === 1) weekly = windows[0]
   if (!weekly && windows.length > 1) weekly = windows[1]
-  if (!session && windows.length > 0) session = windows[0]
-  if (!weekly) weekly = bindingWindow(windows)
+  if (!weekly) weekly = findWindowByTitle(windows, "Monthly")
   return {
     weeklyRemaining: remainingPercent(weekly),
     sessionRemaining: remainingPercent(session)

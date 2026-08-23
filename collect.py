@@ -610,7 +610,7 @@ def fetch_grok(jars: dict) -> dict:
             "plan": plan,
             "loginMethod": plan,
         },
-        "primary": window(used, None, reset_at, "Credits"),
+        "primary": window(used, None, reset_at, "Weekly"),
         "updatedAt": iso_now(),
     }
     if email:

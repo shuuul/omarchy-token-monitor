@@ -110,8 +110,15 @@ const codexIcon = model.iconWindows(codex)
 assert.strictEqual(codexIcon.weeklyRemaining, 41)
 assert.strictEqual(codexIcon.sessionRemaining, 72)
 const cursorIcon = model.iconWindows(cursor)
-assert.strictEqual(cursorIcon.weeklyRemaining, 9)
+assert.strictEqual(cursorIcon.weeklyRemaining, null)
 assert.strictEqual(cursorIcon.sessionRemaining, 9)
+const grokRow = {
+  windows: [{ title: "Weekly", usedPercent: 92 }]
+}
+const grokIcon = model.iconWindows(grokRow)
+assert.strictEqual(grokIcon.weeklyRemaining, 8)
+assert.strictEqual(grokIcon.sessionRemaining, null)
+assert.strictEqual(model.windowTitle("Credits", "", null), "Weekly")
 assert.strictEqual(model.prettyPlan("grok", "SuperGrok Heavy"), "SuperGrok Heavy")
 assert.strictEqual(model.prettyPlan("grok", "Premium"), "X Premium")
 assert.strictEqual(model.prettyPlan("grok", "Free"), "Free")
