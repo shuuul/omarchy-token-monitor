@@ -24,7 +24,9 @@ grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 [[ "$(grep -c '{ id: "' Providers.js)" -eq 7 ]]
 
 # Panel wiring follows the Omarchy agents / clock contract.
-grep -Fq 'text: modelData.name' Panel.qml
+grep -Fq 'modelData.name' Panel.qml
+grep -Fq 'formatUpdatedAgo' Panel.qml
+grep -Fq 'text: usage.busy ? "Refreshing…" : "Refresh"' Panel.qml
 grep -Fq 'Flow {' Panel.qml
 ! grep -Fq 'leftAlign: true' Panel.qml
 ! grep -Fq 'width: providerSwitch.width' Panel.qml

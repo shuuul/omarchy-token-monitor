@@ -220,7 +220,10 @@ Panel {
                 required property var modelData
                 required property int index
 
-                text: modelData.name
+                text: {
+                  var ago = Model.formatUpdatedAgo(modelData.updatedAt, root.nowMs)
+                  return ago === "" ? modelData.name : modelData.name + " · " + ago
+                }
                 selected: index === root.providerIndex
                 hasCursor: root.cursorActive && index === root.providerIndex
                 bordered: true
@@ -361,12 +364,30 @@ Panel {
           }
 
           Text {
-            visible: !!root.provider && root.provider.source !== ""
+            visible: !!root.provider && (root.provider.updatedAt !== "" || root.provider.source !== "")
             width: parent.width
-            text: root.provider ? "Source " + root.provider.source : ""
+            text: {
+              if (!root.provider) return ""
+              var stamp = Model.formatUpdatedAt(root.provider.updatedAt, root.nowMs)
+              if (stamp && root.provider.source) return stamp + " · " + root.provider.source
+              if (stamp) return stamp
+              return root.provider.source ? "Source " + root.provider.source : ""
+            }
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
+          }
+
+          Button {
+            width: parent.width
+            text: usage.busy ? "Refreshing…" : "Refresh"
+            enabled: !usage.busy
+            bordered: true
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.body
+            verticalPadding: Style.spacing.controlPaddingY
+            onClicked: root.refreshNow()
           }
         }
       }

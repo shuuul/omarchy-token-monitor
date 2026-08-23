@@ -365,6 +365,43 @@ function formatDuration(ms) {
   return Math.max(1, minutes) + "m"
 }
 
+function parseStampMs(stamp) {
+  var ms = Date.parse(String(stamp || ""))
+  return isFinite(ms) ? ms : null
+}
+
+function pad2(value) {
+  return (value < 10 ? "0" : "") + value
+}
+
+function formatClock(stamp) {
+  var ms = parseStampMs(stamp)
+  if (ms === null) return ""
+  var date = new Date(ms)
+  return pad2(date.getHours()) + ":" + pad2(date.getMinutes())
+}
+
+function formatUpdatedAgo(stamp, nowMs) {
+  var ms = parseStampMs(stamp)
+  if (ms === null) return ""
+  var now = isFinite(nowMs) ? nowMs : Date.now()
+  var delta = now - ms
+  if (delta < 0) delta = 0
+  if (delta < 15000) return "just now"
+  if (delta < 60000) return Math.floor(delta / 1000) + "s ago"
+  if (delta < 3600000) return Math.floor(delta / 60000) + "m ago"
+  if (delta < 86400000) return Math.floor(delta / 3600000) + "h ago"
+  return Math.floor(delta / 86400000) + "d ago"
+}
+
+function formatUpdatedAt(stamp, nowMs) {
+  var ago = formatUpdatedAgo(stamp, nowMs)
+  if (ago === "") return ""
+  var clock = formatClock(stamp)
+  if (clock) return "Updated " + clock + " · " + ago
+  return "Updated " + ago
+}
+
 function resetRemainingMs(resetAt, nowMs) {
   var stamp = String(resetAt || "")
   if (stamp === "") return -1

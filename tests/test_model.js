@@ -111,6 +111,11 @@ assert.strictEqual(
   model.formatDuration(2 * 3600 * 1000 + 12 * 60 * 1000),
   "2h 12m",
 )
+assert.strictEqual(model.formatUpdatedAgo("", 1), "")
+assert.strictEqual(model.formatUpdatedAgo("2026-08-23T11:00:00Z", Date.parse("2026-08-23T11:00:08Z")), "just now")
+assert.strictEqual(model.formatUpdatedAgo("2026-08-23T11:00:00Z", Date.parse("2026-08-23T11:12:00Z")), "12m ago")
+assert.strictEqual(model.formatUpdatedAgo("2026-08-23T11:00:00Z", Date.parse("2026-08-23T14:00:00Z")), "3h ago")
+assert.ok(model.formatUpdatedAt("2026-08-23T11:00:00Z", Date.parse("2026-08-23T11:12:00Z")).includes("12m ago"))
 
 assert.strictEqual(codex.windows.length, 3)
 assert.strictEqual(codex.plan, "plus")
