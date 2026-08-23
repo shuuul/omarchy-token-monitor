@@ -6,6 +6,7 @@ import Quickshell.Io
 import qs.Commons
 import qs.Ui
 import "Model.js" as Model
+import "Providers.js" as Providers
 
 Panel {
   id: root
@@ -32,6 +33,7 @@ Panel {
 
   property bool cursorActive: false
   property bool settingsOpen: false
+  property bool providerDragActive: false
   property double nowMs: Date.now()
 
   function clamp(v, lo, hi) { return Model.clamp(v, lo, hi) }
@@ -67,6 +69,57 @@ Panel {
     persistSettings({ providers: Model.withProviderEnabled(root.settings, id, enabled).providers })
   }
 
+  function setProviderOrder(ids) {
+    persistSettings({ providerOrder: Providers.orderedIds({ providerOrder: ids }) })
+  }
+
+  function reloadSettingsModel() {
+    if (!settingsProviderModel || root.providerDragActive) return
+    var rows = Providers.settingsCatalog(root.settings)
+    if (settingsProviderModel.count === rows.length) {
+      var same = true
+      for (var i = 0; i < rows.length; i++) {
+        if (settingsProviderModel.get(i).id !== rows[i].id) {
+          same = false
+          break
+        }
+      }
+      if (same) {
+        for (var j = 0; j < rows.length; j++)
+          settingsProviderModel.setProperty(j, "enabled", rows[j].enabled)
+        return
+      }
+    }
+    settingsProviderModel.clear()
+    for (var k = 0; k < rows.length; k++) settingsProviderModel.append(rows[k])
+  }
+
+  function persistSettingsOrder() {
+    var ids = []
+    for (var i = 0; i < settingsProviderModel.count; i++)
+      ids.push(settingsProviderModel.get(i).id)
+    setProviderOrder(ids)
+  }
+
+  function providerIndexAt(y) {
+    var count = settingsProviderModel.count
+    if (count <= 1) return 0
+    var height = 0
+    for (var i = 0; i < providerColumn.children.length; i++) {
+      var child = providerColumn.children[i]
+      if (child && child.height > 0) {
+        height = child.height
+        break
+      }
+    }
+    if (!(height > 0)) return 0
+    var stride = height + providerColumn.spacing
+    var idx = Math.floor(y / stride)
+    if (idx < 0) return 0
+    if (idx >= count) return count - 1
+    return idx
+  }
+
   function resetMsFor(window) {
     return Model.resetRemainingMs(window ? window.resetAt : "", root.nowMs)
   }
@@ -96,6 +149,12 @@ Panel {
     if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
     usage.refresh("")
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+  }
+  onSettingsChanged: root.reloadSettingsModel()
+  Component.onCompleted: root.reloadSettingsModel()
+
+  ListModel {
+    id: settingsProviderModel
   }
 
   Service {
@@ -342,17 +401,88 @@ Panel {
               font.bold: true
             }
 
-            Repeater {
-              model: root.providers
+            Text {
+              width: parent.width
+              text: "Drag a row to reorder the main panel."
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              wrapMode: Text.WordWrap
+            }
 
-              Toggle {
-                required property var modelData
+            Item {
+              id: providerList
+              width: parent.width
+              implicitHeight: providerColumn.implicitHeight
+              height: implicitHeight
+
+              Column {
+                id: providerColumn
                 width: parent.width
-                label: modelData.name
-                checked: modelData.enabled
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                onClicked: root.setProviderEnabled(modelData.id, !modelData.enabled)
+                spacing: Style.space(6)
+                move: Transition {
+                  NumberAnimation { properties: "y"; duration: 120; easing.type: Easing.OutCubic }
+                }
+
+                Repeater {
+                  model: settingsProviderModel
+
+                  Toggle {
+                    required property var model
+                    width: providerColumn.width
+                    label: model.name
+                    checked: model.enabled
+                    foreground: root.foreground
+                    fontFamily: root.fontFamily
+                  }
+                }
+              }
+
+              MouseArea {
+                id: providerDrag
+                anchors.fill: parent
+                hoverEnabled: true
+                preventStealing: true
+                cursorShape: dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                property bool dragging: false
+                property bool moved: false
+                property int fromIndex: -1
+                property real pressY: 0
+
+                onPressed: function(mouse) {
+                  fromIndex = root.providerIndexAt(mouse.y)
+                  pressY = mouse.y
+                  dragging = false
+                  moved = false
+                  root.providerDragActive = true
+                }
+                onPositionChanged: function(mouse) {
+                  if (!pressed) return
+                  if (Math.abs(mouse.y - pressY) < 8) return
+                  dragging = true
+                  var nextIndex = root.providerIndexAt(mouse.y)
+                  if (nextIndex < 0 || nextIndex === fromIndex) return
+                  settingsProviderModel.move(fromIndex, nextIndex, 1)
+                  fromIndex = nextIndex
+                  moved = true
+                }
+                onReleased: {
+                  root.providerDragActive = false
+                  if (moved) root.persistSettingsOrder()
+                  else if (fromIndex >= 0) {
+                    var row = settingsProviderModel.get(fromIndex)
+                    if (row) root.setProviderEnabled(row.id, !row.enabled)
+                  }
+                  dragging = false
+                  moved = false
+                  fromIndex = -1
+                }
+                onCanceled: {
+                  root.providerDragActive = false
+                  dragging = false
+                  moved = false
+                  fromIndex = -1
+                }
               }
             }
           }

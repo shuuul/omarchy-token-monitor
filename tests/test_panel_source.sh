@@ -54,6 +54,9 @@ grep -Fq 'text: "Extra usage"' Panel.qml
 grep -Fq 'tooltipText: "Settings"' Panel.qml
 grep -Fq 'Refresh interval' Panel.qml
 grep -Fq 'Browser cookies' Panel.qml
+grep -Fq 'Drag a row to reorder the main panel.' Panel.qml
+grep -Fq 'settingsProviderModel.move' Panel.qml
+grep -Fq 'providerOrder' Panel.qml
 grep -Fq 'Flow {' Panel.qml
 ! grep -Fq 'leftAlign: true' Panel.qml
 ! grep -Fq 'width: providerSwitch.width' Panel.qml

@@ -72,11 +72,60 @@ function providerEnabled(settings, id) {
   return true
 }
 
-function enabledIds(settings) {
+function orderedIds(settings) {
+  var known = ids()
+  var wanted = settings && settings.providerOrder
   var out = []
-  for (var i = 0; i < SUPPORTED.length; i++) {
-    var id = SUPPORTED[i].id
-    if (providerEnabled(settings, id)) out.push(id)
+  var seen = {}
+  if (wanted && typeof wanted === "object" && wanted.length !== undefined) {
+    for (var i = 0; i < wanted.length; i++) {
+      var id = String(wanted[i] || "")
+      if (!isSupported(id) || seen[id]) continue
+      seen[id] = true
+      out.push(id)
+    }
+  }
+  for (var j = 0; j < known.length; j++) {
+    if (!seen[known[j]]) out.push(known[j])
+  }
+  return out
+}
+
+function moveId(order, fromIndex, toIndex) {
+  var next = []
+  var source = order && typeof order === "object" && order.length !== undefined ? order : []
+  for (var i = 0; i < source.length; i++) next.push(source[i])
+  if (fromIndex < 0 || fromIndex >= next.length) return next
+  var target = toIndex
+  if (target < 0) target = 0
+  if (target >= next.length) target = next.length - 1
+  if (fromIndex === target) return next
+  var item = next.splice(fromIndex, 1)[0]
+  next.splice(target, 0, item)
+  return next
+}
+
+function enabledIds(settings) {
+  var order = orderedIds(settings)
+  var out = []
+  for (var i = 0; i < order.length; i++) {
+    if (providerEnabled(settings, order[i])) out.push(order[i])
+  }
+  return out
+}
+
+function settingsCatalog(settings) {
+  var order = orderedIds(settings)
+  var out = []
+  for (var i = 0; i < order.length; i++) {
+    var item = descriptor(order[i])
+    if (!item) continue
+    out.push({
+      id: item.id,
+      name: item.name,
+      monogram: item.monogram,
+      enabled: providerEnabled(settings, item.id)
+    })
   }
   return out
 }

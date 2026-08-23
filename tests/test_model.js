@@ -32,6 +32,10 @@ assert.strictEqual(model.browserName({}), "chrome")
 assert.strictEqual(model.browserName({ browser: "chromium" }), "chromium")
 assert.strictEqual(model.mergeSettings({ browser: "chrome" }, { refreshIntervalSec: 300 }).refreshIntervalSec, 300)
 assert.strictEqual(model.withProviderEnabled({ providers: { grok: { enabled: true } } }, "grok", false).providers.grok.enabled, false)
+assert.deepStrictEqual(
+  Array.from(model.withProviderOrder({ browser: "chrome" }, ["factory", "cursor"]).providerOrder),
+  ["factory", "cursor"],
+)
 
 const snapshot = [
   {
@@ -81,6 +85,15 @@ const rows = model.providersFromSnapshot(
   providers.catalog(),
 )
 assert.strictEqual(rows.length, 8)
+const orderedRows = model.providersFromSnapshot(
+  parsed,
+  Array.from(providers.enabledIds({ providerOrder: ["factory", "cursor", "codex"] })),
+  providers.catalog(),
+)
+assert.deepStrictEqual(
+  Array.from(orderedRows.map((row) => row.id)).slice(0, 3),
+  ["factory", "cursor", "codex"],
+)
 assert.strictEqual(rows.every((row) => providers.isSupported(row.id)), true)
 assert.strictEqual(rows.some((row) => row.id === "claude"), false)
 

@@ -73,6 +73,13 @@ function withProviderEnabled(current, providerId, enabled) {
   return mergeSettings(current, { providers: providers })
 }
 
+function withProviderOrder(current, order) {
+  var ids = []
+  var source = order && typeof order === "object" && order.length !== undefined ? order : []
+  for (var i = 0; i < source.length; i++) ids.push(String(source[i] || ""))
+  return mergeSettings(current, { providerOrder: ids })
+}
+
 function collectScript() {
   if (typeof Qt !== "undefined" && Qt.resolvedUrl)
     return Qt.resolvedUrl("collect.py").toString().replace(/^file:\/\//, "")
