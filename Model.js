@@ -174,6 +174,14 @@ function errorText(value) {
   return String(value)
 }
 
+function titleCaseLabel(label) {
+  var plain = String(label || "").replace(/\s*\(.*\)\s*/, "").trim()
+  if (plain === "") return "Limit"
+  return plain.replace(/\b([a-z])/g, function(match) {
+    return match.toUpperCase()
+  })
+}
+
 function windowTitle(label, kind, minutes) {
   var text = String(label || "").toLowerCase()
   var kindText = String(kind || "").toLowerCase()
@@ -184,8 +192,7 @@ function windowTitle(label, kind, minutes) {
   if (text.indexOf("credit") >= 0) return "Weekly"
   if (minutes === 10080) return "Weekly"
   if (minutes === 300) return "Session"
-  var plain = String(label || "").replace(/\s*\(.*\)\s*/, "").trim()
-  return plain === "" ? "Limit" : plain
+  return titleCaseLabel(label)
 }
 
 function normalizeRateWindow(raw, label, kind) {
@@ -252,18 +259,32 @@ function findWindowByTitle(windows, title) {
   var wanted = String(title || "").toLowerCase()
   var rows = Array.isArray(windows) ? windows : []
   for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i].title || "").toLowerCase() === wanted) return rows[i]
+    var row = rows[i] || {}
+    var titleText = String(row.title || "").toLowerCase()
+    var labelText = String(row.label || "").toLowerCase()
+    if (titleText === wanted || labelText === wanted) return row
   }
   return null
 }
 
 function iconWindows(provider) {
   var windows = provider && Array.isArray(provider.windows) ? provider.windows : []
+  var named = []
+  for (var i = 0; i < windows.length; i++) {
+    var title = String(windows[i].title || windows[i].label || "")
+    if (title && title !== "Plan") named.push(windows[i])
+  }
   var weekly = findWindowByTitle(windows, "Weekly")
+    || findWindowByTitle(windows, "Cursor models")
+    || findWindowByTitle(windows, "Monthly")
   var session = findWindowByTitle(windows, "Session")
-  if (!weekly && !session && windows.length === 1) weekly = windows[0]
-  if (!weekly && windows.length > 1) weekly = windows[1]
-  if (!weekly) weekly = findWindowByTitle(windows, "Monthly")
+    || findWindowByTitle(windows, "Third-party")
+    || findWindowByTitle(windows, "Third party")
+  if (weekly && session && weekly === session) session = null
+  if (!weekly && !session && named.length === 1) weekly = named[0]
+  if (!weekly && named.length > 0 && named[0] !== session) weekly = named[0]
+  if (!session && named.length > 1 && named[1] !== weekly) session = named[1]
+  if (weekly && session && weekly === session) session = null
   return {
     weeklyRemaining: remainingPercent(weekly),
     sessionRemaining: remainingPercent(session)
