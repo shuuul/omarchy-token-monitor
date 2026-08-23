@@ -41,6 +41,8 @@ grep -Fq 'M2.25 1.5a.75.75 0 0 0-.75.75v16.5H0V2.25' assets/zed.svg
 grep -Fq 'text: modelData.name' Panel.qml
 grep -Fq 'Model.iconWindows' Panel.qml
 grep -Fq 'id: usageBars' Panel.qml
+grep -Fq 'colorizationColor' Panel.qml
+grep -Fq 'Style.bar.iconCanvas' Panel.qml
 grep -Fq 'anchors.verticalCenter: parent.verticalCenter' Panel.qml
 grep -Fq 'formatUpdatedAt' Panel.qml
 grep -Fq 'Refresh " + root.provider.name' Panel.qml

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import qs.Commons
@@ -119,25 +120,40 @@ Panel {
     readonly property var iconWindows: Model.iconWindows(root.provider)
     readonly property real weeklyRemaining: iconWindows.weeklyRemaining === null ? -1 : iconWindows.weeklyRemaining / 100
     readonly property real sessionRemaining: iconWindows.sessionRemaining === null ? -1 : iconWindows.sessionRemaining / 100
+    readonly property int markSize: Style.bar.iconCanvas
+    readonly property int meterGap: Math.max(2, Math.round(markSize * 0.12))
+    readonly property int weeklyHeight: Math.max(4, Math.round((markSize - meterGap) * 0.58))
+    readonly property int sessionHeight: Math.max(3, markSize - meterGap - weeklyHeight)
+    readonly property int meterWidth: markSize
 
     Item {
       id: barSlot
       anchors.verticalCenter: parent.verticalCenter
       anchors.horizontalCenter: parent.horizontalCenter
-      width: barIcon.width + Style.space(6) + usageBars.width
-      height: Math.max(barIcon.height, usageBars.height)
+      width: button.markSize + Style.space(6) + usageBars.width
+      height: button.markSize
 
       Image {
         id: barIcon
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        width: Style.font.body
-        height: Style.font.body
+        width: button.markSize
+        height: button.markSize
         source: Qt.resolvedUrl("assets/" + usage.barIconIdFor(selectedProviderId) + ".svg")
-        sourceSize.width: Style.font.body * 2
-        sourceSize.height: Style.font.body * 2
+        sourceSize.width: button.markSize * 2
+        sourceSize.height: button.markSize * 2
         fillMode: Image.PreserveAspectFit
         asynchronous: false
+        visible: false
+        layer.enabled: true
+      }
+
+      MultiEffect {
+        id: barIconTint
+        anchors.fill: barIcon
+        source: barIcon
+        colorization: 1.0
+        colorizationColor: button.active ? button.activeColor : button.foreground
       }
 
       Column {
@@ -145,17 +161,18 @@ Panel {
         anchors.left: barIcon.right
         anchors.leftMargin: Style.space(6)
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Math.max(2, Math.round(Style.space(2)))
-        width: Style.space(18)
+        spacing: button.meterGap
+        width: button.meterWidth
+        height: button.markSize
 
         UsageBar {
           remaining: button.weeklyRemaining
-          barHeight: Math.max(4, Math.round(Style.space(5)))
+          barHeight: button.weeklyHeight
         }
 
         UsageBar {
           remaining: button.sessionRemaining
-          barHeight: Math.max(3, Math.round(Style.space(4)))
+          barHeight: button.sessionHeight
         }
       }
     }
