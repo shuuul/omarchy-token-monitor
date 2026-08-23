@@ -63,10 +63,15 @@ Panel {
   implicitHeight: button.implicitHeight
 
   onProviderIndexChanged: if (panelFlick) panelFlick.contentY = 0
+  onProvidersChanged: {
+    if (selectedProviderId !== "") return
+    if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
+  }
   onOpenedChanged: if (opened) {
     cursorActive = false
     nowMs = Date.now()
     if (panelFlick) panelFlick.contentY = 0
+    if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
     usage.refresh()
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
@@ -192,11 +197,9 @@ Panel {
             visible: root.providers.length === 0
             width: parent.width
             topPadding: Style.space(24)
-            text: usage.missingCli
-              ? "Install the CodexBar Linux CLI, then enable Amp, Codex, Kimi, Cursor, Grok, Notion, or Zed."
-              : (usage.lastError !== ""
-                ? usage.lastError
-                : "No supported CodexBar providers yet.\nEnable Amp, Codex, Kimi, Cursor, Grok, Notion, or Zed in CodexBar.")
+            text: usage.lastError !== ""
+              ? usage.lastError
+              : "Waiting for Amp, Codex, Kimi, Cursor, Grok, Notion, and Zed."
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.body
@@ -204,15 +207,11 @@ Panel {
             wrapMode: Text.WordWrap
           }
 
-          Row {
+          Flow {
             id: providerSwitch
             visible: root.providers.length > 1
             width: parent.width
-            spacing: Style.spacing.md
-
-            readonly property real cellWidth: root.providers.length > 0
-              ? (width - spacing * (root.providers.length - 1)) / root.providers.length
-              : 0
+            spacing: Style.spacing.sm
 
             Repeater {
               model: root.providers
@@ -221,7 +220,6 @@ Panel {
                 required property var modelData
                 required property int index
 
-                width: providerSwitch.cellWidth
                 text: modelData.name
                 selected: index === root.providerIndex
                 hasCursor: root.cursorActive && index === root.providerIndex

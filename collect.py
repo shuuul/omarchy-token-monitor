@@ -164,9 +164,20 @@ def load_cookies(browser: str) -> dict[str, dict[str, str]]:
             meta_version = int(version_row[0]) if version_row else 0
         except sqlite3.Error:
             meta_version = 0
+        wanted = (
+            "WorkosCursorSessionToken",
+            "token_v2",
+            "sso",
+            "sso-rw",
+            "session",
+            "kimi-auth",
+            "zed.session",
+        )
+        placeholders = ",".join("?" * len(wanted))
         jars: dict[str, dict[str, str]] = {}
         for host, name, encrypted in con.execute(
-            "SELECT host_key, name, encrypted_value FROM cookies"
+            f"SELECT host_key, name, encrypted_value FROM cookies WHERE name IN ({placeholders})",
+            wanted,
         ):
             value = decrypt_cookie(key, encrypted, meta_version)
             if value:

@@ -24,4 +24,6 @@ payload = bytes.fromhex("0000000056") + b"\nT" + b"\r\x00\x00\x82B"
 # The live parser is covered by the live collector; keep a structural check here.
 row = collect.row("grok", source="chrome", error="x")
 assert row["error"]["message"] == "x"
+source = (ROOT / "collect.py").read_text()
+assert "WHERE name IN" in source
 print("collect tests passed")

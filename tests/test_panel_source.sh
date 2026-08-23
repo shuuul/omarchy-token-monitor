@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Vendor HTTP stays in collect.py. QML only renders.
 grep -Fq 'collect.py' Model.js
-grep -Fq 'python3' Model.js
+grep -Fq '/usr/bin/python3' Model.js
 grep -Fq 'Model.collectCommand({' Service.qml
 ! grep -Eq 'ampcode.com|chatgpt.com|api.kimi.com|cursor.com|cli-chat-proxy.grok.com|app.notion.com|cloud.zed.dev' \
   Model.js Providers.js Service.qml Panel.qml
