@@ -83,7 +83,7 @@ Stdout is one JSON array. Cookies and tokens never appear there.
 | Codex | `codex` | `~/.codex/auth.json` |
 | Kimi Code | `kimi` | `~/.kimi-code/credentials/` on kimi.com and kimi.ai |
 | Cursor | `cursor` | Chrome cookie `WorkosCursorSessionToken` |
-| Grok | `grok` | Chrome cookies `sso` / `sso-rw` |
+| Grok | `grok` | `grok login` / `~/.grok/auth.json`, then Chrome cookies `sso` / `sso-rw` |
 | Notion AI | `notion` | Chrome cookie `token_v2` |
 | Zed | `zed` | Linux keyring item `zed-github-account` |
 | Droid | `factory` | `droid` CLI keyring, `FACTORY_API_KEY`, or Chrome cookies |

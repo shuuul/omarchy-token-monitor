@@ -126,6 +126,21 @@ assert collect.grok_pretty_plan("Premium") == "X Premium"
 assert collect.grok_pretty_plan("Premium+") == "X Premium+"
 assert collect.grok_pretty_plan("SuperGrok Heavy") == "SuperGrok Heavy"
 assert collect.grok_pretty_plan("") == ""
+assert collect.grok_login_method({"auth_mode": "oidc", "scope": "https://auth.x.ai::cli"}) == "SuperGrok"
+assert collect.grok_login_method({"auth_mode": "session"}) == "session"
+assert collect.grok_env_token() is None
+oidc, legacy = {
+    "https://auth.x.ai::cli": {"key": "oidc-token", "auth_mode": "oidc", "email": "user@example.com"},
+    "https://accounts.x.ai/sign-in": {"key": "legacy-token", "auth_mode": "session"},
+}, None
+scope, entry = collect.grok_select_auth_entry(oidc)
+assert scope.startswith("https://auth.x.ai::")
+assert entry["auth_mode"] == "oidc"
+assert collect.grok_parse_billing(b'{"config":{"creditUsagePercent":12.5,"currentPeriod":{"end":"2026-09-01T00:00:00Z"}}}') == (
+    12.5,
+    "2026-09-01T00:00:00Z",
+)
+assert collect.grok_settings_plan_from_body(b'{"subscription_tier_display":"SuperGrok"}') == "SuperGrok"
 assert collect.kimi_plan_name(
     "token",
     {"me": None},
@@ -139,6 +154,8 @@ assert "api.kimi.ai/coding/v1/usages" in source
 assert "api.kimi.com/coding/v1/me" in source
 assert "api.kimi.ai/coding/v1/me" in source
 assert "cli-chat-proxy.grok.com/v1/settings" in source
+assert "cli-chat-proxy.grok.com/v1/billing?format=credits" in source
+assert "GROK_OAUTH_TOKEN" in source
 assert '"Weekly"' in source
 assert "Codex Spark" in source
 assert "accounts.x.ai/api/auth/session" in source

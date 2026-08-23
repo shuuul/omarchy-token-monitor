@@ -538,6 +538,124 @@ def parse_grok_grpc(payload: bytes) -> dict:
     return used, reset_at
 
 
+GROK_OIDC_SCOPE_PREFIX = "https://auth.x.ai::"
+GROK_LEGACY_SCOPE = "https://accounts.x.ai/sign-in"
+
+
+def grok_home() -> Path:
+    custom = str(os.environ.get("GROK_HOME") or "").strip()
+    return Path(custom).expanduser() if custom else HOME / ".grok"
+
+
+def grok_parse_stamp(raw) -> datetime | None:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    text = text.replace("Z", "+00:00")
+    if "." in text:
+        head, rest = text.split(".", 1)
+        digits = ""
+        tz = ""
+        for index, char in enumerate(rest):
+            if char.isdigit():
+                digits += char
+            else:
+                tz = rest[index:]
+                break
+        text = f"{head}.{(digits + '000000')[:6]}{tz}"
+    try:
+        stamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return stamp.astimezone(timezone.utc)
+
+
+def grok_iso(stamp: datetime | None) -> str | None:
+    if stamp is None:
+        return None
+    return stamp.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def grok_env_token() -> str | None:
+    raw = str(os.environ.get("GROK_OAUTH_TOKEN") or "").strip()
+    if raw.lower().startswith("bearer "):
+        raw = raw[7:].strip()
+    if not raw or raw.lower().startswith(("cookie:", "xai-")) or "=" in raw:
+        return None
+    return raw
+
+
+def grok_select_auth_entry(root: dict) -> tuple[str, dict] | None:
+    oidc = None
+    legacy = None
+    for scope, value in (root or {}).items():
+        if not isinstance(value, dict):
+            continue
+        key = str(value.get("key") or "").strip()
+        if not key:
+            continue
+        scope_text = str(scope or "")
+        if scope_text.startswith(GROK_OIDC_SCOPE_PREFIX):
+            oidc = (scope_text, value)
+        elif scope_text == GROK_LEGACY_SCOPE or "/sign-in" in scope_text:
+            legacy = (scope_text, value)
+    return oidc or legacy
+
+
+def grok_credentials_from_entry(scope: str, entry: dict) -> dict:
+    expires = grok_parse_stamp(entry.get("expires_at"))
+    now = datetime.now(timezone.utc)
+    return {
+        "scope": scope,
+        "access_token": str(entry.get("key") or "").strip(),
+        "auth_mode": str(entry.get("auth_mode") or "").strip(),
+        "email": str(entry.get("email") or "").strip() or None,
+        "principal_type": str(entry.get("principal_type") or "").strip() or None,
+        "expires_at": grok_iso(expires),
+        "expired": bool(expires and expires <= now),
+    }
+
+
+def grok_load_credentials() -> dict | None:
+    token = grok_env_token()
+    if token:
+        return {
+            "scope": GROK_OIDC_SCOPE_PREFIX,
+            "access_token": token,
+            "auth_mode": "oidc",
+            "email": None,
+            "principal_type": None,
+            "expires_at": None,
+            "expired": False,
+        }
+    path = grok_home() / "auth.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    selected = grok_select_auth_entry(data)
+    if not selected:
+        return None
+    return grok_credentials_from_entry(*selected)
+
+
+def grok_login_method(creds: dict | None) -> str:
+    if not creds:
+        return ""
+    mode = str(creds.get("auth_mode") or "").strip().lower()
+    if mode == "oidc" or str(creds.get("scope") or "").startswith(GROK_OIDC_SCOPE_PREFIX):
+        return "SuperGrok"
+    if mode == "session":
+        return "session"
+    return grok_pretty_plan(str(creds.get("auth_mode") or ""))
+
+
 def grok_pretty_plan(raw: str) -> str:
     compact = "".join(ch for ch in raw.lower() if ch.isalnum() or ch == "+")
     letters = "".join(ch for ch in compact if ch.isalpha())
@@ -558,6 +676,35 @@ def grok_pretty_plan(raw: str) -> str:
     return raw.strip()
 
 
+def grok_bearer_headers(token: str) -> dict:
+    return {
+        "Authorization": f"Bearer {token}",
+        "x-xai-token-auth": "xai-grok-cli",
+        "Accept": "application/json",
+    }
+
+
+def grok_settings_plan_from_body(body: bytes | str) -> str:
+    try:
+        data = json.loads(body)
+    except (TypeError, json.JSONDecodeError):
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    return grok_pretty_plan(str(data.get("subscription_tier_display") or ""))
+
+
+def grok_oauth_settings_plan(token: str) -> str:
+    status, body, _ = http(
+        "https://cli-chat-proxy.grok.com/v1/settings",
+        headers=grok_bearer_headers(token),
+        timeout=2,
+    )
+    if status != 200:
+        return ""
+    return grok_settings_plan_from_body(body)
+
+
 def grok_settings_plan(header: str) -> str:
     status, body, _ = http(
         "https://cli-chat-proxy.grok.com/v1/settings",
@@ -566,11 +713,7 @@ def grok_settings_plan(header: str) -> str:
     )
     if status != 200:
         return ""
-    try:
-        data = json.loads(body)
-    except json.JSONDecodeError:
-        return ""
-    return grok_pretty_plan(str(data.get("subscription_tier_display") or ""))
+    return grok_settings_plan_from_body(body)
 
 
 def grok_session_plan(header: str) -> tuple[str, str | None]:
@@ -596,16 +739,83 @@ def grok_session_plan(header: str) -> tuple[str, str | None]:
     return plan, email
 
 
-def grok_plan_name(header: str) -> tuple[str, str | None]:
+def grok_plan_name(header: str, creds: dict | None = None) -> tuple[str, str | None]:
     billed, email = grok_session_plan(header)
     settings = grok_settings_plan(header)
-    return settings or billed, email
+    oauth_plan = ""
+    if creds and not creds.get("expired") and creds.get("access_token"):
+        oauth_plan = grok_oauth_settings_plan(str(creds["access_token"]))
+    plan = oauth_plan or settings or grok_login_method(creds) or billed
+    if creds and creds.get("email"):
+        email = creds.get("email")
+    return plan, email
+
+
+def grok_parse_billing(body: bytes | str) -> tuple[float, str | None] | None:
+    try:
+        data = json.loads(body)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    config = data.get("config") if isinstance(data.get("config"), dict) else {}
+    period = config.get("currentPeriod") if isinstance(config.get("currentPeriod"), dict) else {}
+    reset_at = grok_iso(grok_parse_stamp(period.get("end") or config.get("billingPeriodEnd")))
+    percent = config.get("creditUsagePercent")
+    if isinstance(percent, (int, float)):
+        return max(0.0, min(100.0, float(percent))), reset_at
+    cap = ((config.get("onDemandCap") or {}).get("val") if isinstance(config.get("onDemandCap"), dict) else None)
+    used = ((config.get("onDemandUsed") or {}).get("val") if isinstance(config.get("onDemandUsed"), dict) else None)
+    if isinstance(cap, (int, float)) and cap > 0 and isinstance(used, (int, float)):
+        return max(0.0, min(100.0, float(used) / float(cap) * 100.0)), reset_at
+    if reset_at:
+        return 0.0, reset_at
+    return None
+
+
+def grok_oauth_billing(token: str) -> tuple[float, str | None] | None:
+    status, body, _ = http(
+        "https://cli-chat-proxy.grok.com/v1/billing?format=credits",
+        headers=grok_bearer_headers(token),
+        timeout=15,
+    )
+    if status != 200:
+        return None
+    return grok_parse_billing(body)
+
+
+def grok_usage_row(source: str, used: float, reset_at: str | None, plan: str, email: str | None) -> dict:
+    usage = {
+        "loginMethod": plan,
+        "identity": {
+            "providerID": "grok",
+            "accountEmail": email,
+            "plan": plan,
+            "loginMethod": plan,
+        },
+        "primary": window(used, None, reset_at, "Weekly"),
+        "updatedAt": iso_now(),
+    }
+    if email:
+        usage["accountEmail"] = email
+    return row("grok", source=source, usage=usage)
 
 
 def fetch_grok(jars: dict) -> dict:
+    creds = grok_load_credentials()
+    token = str((creds or {}).get("access_token") or "")
+    if creds and not creds.get("expired") and token:
+        billing = grok_oauth_billing(token)
+        if billing is not None:
+            used, reset_at = billing
+            plan = grok_oauth_settings_plan(token) or grok_login_method(creds)
+            return grok_usage_row("oauth", used, reset_at, plan, creds.get("email"))
+
     header = cookie_header(jars, [("sso", [".grok.com", "grok.com", ".x.ai"]), ("sso-rw", [".grok.com", "grok.com", ".x.ai"])])
     if not header:
-        return row("grok", source="chrome", error="Sign in to grok.com in Chrome.")
+        if creds and creds.get("expired"):
+            return row("grok", source="oauth", error="Grok login expired. Run `grok login`.")
+        return row("grok", source="chrome", error="Run `grok login`, or sign in to grok.com in Chrome.")
     status, body, _ = http(
         "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig",
         method="POST",
@@ -625,21 +835,8 @@ def fetch_grok(jars: dict) -> dict:
         used, reset_at = parse_grok_grpc(body)
     except Exception:
         return row("grok", source="chrome", error="Could not parse Grok billing payload.")
-    plan, email = grok_plan_name(header)
-    usage = {
-        "loginMethod": plan,
-        "identity": {
-            "providerID": "grok",
-            "accountEmail": email,
-            "plan": plan,
-            "loginMethod": plan,
-        },
-        "primary": window(used, None, reset_at, "Weekly"),
-        "updatedAt": iso_now(),
-    }
-    if email:
-        usage["accountEmail"] = email
-    return row("grok", source="chrome", usage=usage)
+    plan, email = grok_plan_name(header, creds)
+    return grok_usage_row("chrome", used, reset_at, plan, email)
 
 
 KIMI_CLIENT_ID = "17e5f671-d194-4dfb-9706-5516cb48c098"
