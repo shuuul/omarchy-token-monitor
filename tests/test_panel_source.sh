@@ -10,6 +10,7 @@ grep -Fq 'Model.collectCommand({' Service.qml
   Model.js Providers.js Service.qml Panel.qml
 grep -Fq 'ampcode.com' collect.py
 grep -Fq 'auth.kimi.com/api/oauth/token' collect.py
+grep -Fq 'auth.kimi.ai/api/oauth/token' collect.py
 grep -Fq 'zed-github-account' collect.py
 
 # The supported set is closed and uses CodexBar IDs exactly.
