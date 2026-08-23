@@ -207,11 +207,11 @@ Panel {
             wrapMode: Text.WordWrap
           }
 
-          Flow {
+          Column {
             id: providerSwitch
             visible: root.providers.length > 1
             width: parent.width
-            spacing: Style.spacing.sm
+            spacing: Style.space(4)
 
             Repeater {
               model: root.providers
@@ -220,13 +220,15 @@ Panel {
                 required property var modelData
                 required property int index
 
+                width: providerSwitch.width
+                leftAlign: true
                 text: modelData.name
                 selected: index === root.providerIndex
                 hasCursor: root.cursorActive && index === root.providerIndex
                 bordered: true
                 foreground: root.foreground
                 fontFamily: root.fontFamily
-                fontSize: Style.font.bodySmall
+                fontSize: Style.font.body
                 verticalPadding: Style.spacing.controlPaddingY
                 onClicked: {
                   root.cursorActive = true
