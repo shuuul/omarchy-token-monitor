@@ -33,7 +33,7 @@ desktop client's Linux keyring item after `client: sign in`.
 Install the Omarchy plugin:
 
 ```bash
-omarchy plugin add <this-git-url> --enable
+omarchy plugin add https://github.com/shuuul/omarchy-token-monitor.git --enable
 ```
 
 During local development, from this checkout:
