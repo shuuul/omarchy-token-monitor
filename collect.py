@@ -16,6 +16,7 @@ import sqlite3
 import ssl
 import struct
 import subprocess
+import sys
 import tempfile
 import time
 import urllib.error
@@ -915,7 +916,34 @@ def fetch_zed() -> dict:
     return row("zed", source="keyring", usage=usage)
 
 
-def collect(settings: dict | None = None) -> list[dict]:
+def requested_providers(settings: dict, argv: list[str] | None = None) -> tuple[str, ...]:
+    args = list(argv or [])
+    wanted: list[str] = []
+    skip = False
+    for item in args:
+        if skip:
+            skip = False
+            continue
+        if item in ("-p", "--provider"):
+            skip = True
+            continue
+        if item.startswith("--provider="):
+            wanted.append(item.split("=", 1)[1])
+            continue
+        if item.startswith("-") or item.endswith(".py"):
+            continue
+        wanted.append(item)
+    only = str((settings or {}).get("only") or "").strip()
+    if only:
+        wanted.append(only)
+    names = []
+    for name in wanted:
+        if name in PROVIDERS and name not in names:
+            names.append(name)
+    return tuple(names) if names else PROVIDERS
+
+
+def collect(settings: dict | None = None, argv: list[str] | None = None) -> list[dict]:
     settings = settings or {}
     enabled = settings.get("providers") or {}
     browser, jars = preferred_jars(settings)
@@ -929,7 +957,7 @@ def collect(settings: dict | None = None) -> list[dict]:
         "zed": fetch_zed,
     }
     out = []
-    for provider in PROVIDERS:
+    for provider in requested_providers(settings, argv):
         entry = enabled.get(provider) if isinstance(enabled, dict) else None
         if entry and entry.get("enabled") is False:
             continue
@@ -945,7 +973,7 @@ def main() -> int:
     raw = os.environ.get("OTM_SETTINGS_JSON")
     if raw:
         settings = json.loads(raw)
-    print(json.dumps(collect(settings), separators=(",", ":")))
+    print(json.dumps(collect(settings, sys.argv[1:]), separators=(",", ":")))
     return 0
 
 

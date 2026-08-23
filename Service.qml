@@ -46,10 +46,14 @@ Item {
     return url.replace(/^file:\/\//, "").replace(/\/collect\.py$/, "")
   }
 
-  function refresh() {
+  property string pendingOnly: ""
+
+  function refresh(onlyId) {
     if (dashboardProcess.running) return
+    pendingOnly = onlyId ? String(onlyId) : ""
     dashboardProcess.command = Model.collectCommand({
-      collectPath: root.pluginDir + "/collect.py"
+      collectPath: root.pluginDir + "/collect.py",
+      only: pendingOnly
     })
     dashboardProcess.running = true
   }
@@ -57,25 +61,30 @@ Item {
   function applyOutput(text, exitCode) {
     var next = Model.parseSnapshot(text)
     if (next) {
-      snapshot = next
+      if (pendingOnly && snapshot && Array.isArray(snapshot.providers))
+        snapshot = { providers: Model.mergeProviderRows(snapshot.providers, next.providers) }
+      else
+        snapshot = next
       lastError = ""
       missingCli = false
       hasSnapshot = true
+      pendingOnly = ""
       dataRevision++
       return
     }
     lastError = Model.parseError(text, exitCode)
     missingCli = exitCode === 2
+    pendingOnly = ""
     dataRevision++
   }
 
-  Component.onCompleted: refresh()
+  Component.onCompleted: refresh("")
 
   Timer {
     interval: root.refreshIntervalSec * 1000
     running: true
     repeat: true
-    onTriggered: root.refresh()
+    onTriggered: root.refresh("")
   }
 
   Process {

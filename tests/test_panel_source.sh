@@ -24,9 +24,9 @@ grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 [[ "$(grep -c '{ id: "' Providers.js)" -eq 7 ]]
 
 # Panel wiring follows the Omarchy agents / clock contract.
-grep -Fq 'modelData.name' Panel.qml
-grep -Fq 'formatUpdatedAgo' Panel.qml
-grep -Fq 'text: usage.busy ? "Refreshing…" : "Refresh"' Panel.qml
+grep -Fq 'text: modelData.name' Panel.qml
+grep -Fq 'formatUpdatedAt' Panel.qml
+grep -Fq 'Refresh " + root.provider.name' Panel.qml
 grep -Fq 'Flow {' Panel.qml
 ! grep -Fq 'leftAlign: true' Panel.qml
 ! grep -Fq 'width: providerSwitch.width' Panel.qml
@@ -34,7 +34,8 @@ grep -Fq 'moduleName: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'ipcTarget: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'function refresh(): string' Panel.qml
 grep -Fq 'function next(): string' Panel.qml
-grep -Fq 'usage.refresh()' Panel.qml
+grep -Fq 'usage.refresh("")' Panel.qml
+grep -Fq 'usage.refresh(onlyId || selectedProviderId)' Panel.qml
 ! grep -Eq '\broot\.state\b' Service.qml Panel.qml
 
 # Nested Component blocks must not use an ambiguous `root.`

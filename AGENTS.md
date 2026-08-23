@@ -36,6 +36,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Kimi has two regions. Check both: `kimi.com` (China) and `kimi.ai` (international). Pair tokens/cookies only with the matching host.
 - Plan labels: Codex `prolite` is Pro 5x, `pro` is Pro 20x. Kimi billed tier is `/coding/v1/me` `user_level_name` (Allegretto, not `membership.level`). Notion billed tier is space `subscription_tier`. Grok billed tier is `/v1/settings` `subscription_tier_display` when present, otherwise `accounts.x.ai` `xSubscriptionType` (Premium → X Premium). Do not invent Free.
 - The bar icon and label follow the panel's selected provider. Without a selection they still fall back to the fullest usage window.
+- Update age lives under the selected provider, above Refresh. The Refresh button fetches only that provider and merges it into the existing snapshot.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list.
 - Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.
 - `collect.py` must inherit the Omarchy shell environment. Do not rewrite `HOME` or `PATH` in the Process argv; an empty `HOME` makes Amp look like `No such file` and every cookie provider look signed out.

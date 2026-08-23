@@ -58,7 +58,33 @@ function collectScript() {
 function collectCommand(settings) {
   var script = settings && settings.collectPath ? String(settings.collectPath) : ""
   if (!script) script = collectScript()
-  return ["/usr/bin/timeout", "25", "/usr/bin/python3", script]
+  var command = ["/usr/bin/timeout", "25", "/usr/bin/python3", script]
+  var only = settings && settings.only ? String(settings.only).trim() : ""
+  if (only) command.push(only)
+  return command
+}
+
+function mergeProviderRows(existing, incoming) {
+  var current = Array.isArray(existing) ? existing.slice() : []
+  var updates = Array.isArray(incoming) ? incoming : []
+  if (updates.length === 0) return current
+  var byId = {}
+  for (var i = 0; i < current.length; i++) {
+    var row = current[i] || {}
+    var id = String(row.provider || row.id || "")
+    if (id) byId[id] = i
+  }
+  for (var j = 0; j < updates.length; j++) {
+    var next = updates[j] || {}
+    var nextId = String(next.provider || next.id || "")
+    if (!nextId) {
+      current.push(next)
+      continue
+    }
+    if (byId.hasOwnProperty(nextId)) current[byId[nextId]] = next
+    else current.push(next)
+  }
+  return current
 }
 
 function usageCommand(settings) {

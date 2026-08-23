@@ -41,8 +41,8 @@ Panel {
     selectedProviderId = providers[wrapped].id
   }
 
-  function refreshNow() {
-    usage.refresh()
+  function refreshNow(onlyId) {
+    usage.refresh(onlyId || selectedProviderId)
   }
 
   function resetMsFor(window) {
@@ -72,7 +72,7 @@ Panel {
     nowMs = Date.now()
     if (panelFlick) panelFlick.contentY = 0
     if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
-    usage.refresh()
+    usage.refresh("")
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
@@ -220,10 +220,7 @@ Panel {
                 required property var modelData
                 required property int index
 
-                text: {
-                  var ago = Model.formatUpdatedAgo(modelData.updatedAt, root.nowMs)
-                  return ago === "" ? modelData.name : modelData.name + " · " + ago
-                }
+                text: modelData.name
                 selected: index === root.providerIndex
                 hasCursor: root.cursorActive && index === root.providerIndex
                 bordered: true
@@ -380,14 +377,14 @@ Panel {
 
           Button {
             width: parent.width
-            text: usage.busy ? "Refreshing…" : "Refresh"
-            enabled: !usage.busy
+            text: usage.busy ? "Refreshing…" : (root.provider ? "Refresh " + root.provider.name : "Refresh")
+            enabled: !usage.busy && !!root.provider
             bordered: true
             foreground: root.foreground
             fontFamily: root.fontFamily
             fontSize: Style.font.body
             verticalPadding: Style.spacing.controlPaddingY
-            onClicked: root.refreshNow()
+            onClicked: root.refreshNow(root.selectedProviderId)
           }
         }
       }

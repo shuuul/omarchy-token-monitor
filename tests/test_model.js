@@ -14,6 +14,17 @@ assert.deepStrictEqual(
   Array.from(model.collectCommand({ collectPath: "/tmp/collect.py" })),
   ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py"],
 )
+assert.deepStrictEqual(
+  Array.from(model.collectCommand({ collectPath: "/tmp/collect.py", only: "grok" })),
+  ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py", "grok"],
+)
+assert.deepStrictEqual(
+  model.mergeProviderRows(
+    [{ provider: "codex", usage: { loginMethod: "old" } }, { provider: "grok", usage: { loginMethod: "keep" } }],
+    [{ provider: "codex", usage: { loginMethod: "new" } }],
+  ),
+  [{ provider: "codex", usage: { loginMethod: "new" } }, { provider: "grok", usage: { loginMethod: "keep" } }],
+)
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 12 }), 30)
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 9000 }), 3600)
 

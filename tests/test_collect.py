@@ -27,6 +27,9 @@ assert row["error"]["message"] == "x"
 assert collect.kimi_token_fresh({"expires_at": 1}, now=100) is False
 assert collect.kimi_token_fresh({"expires_at": 200}, now=100) is True
 assert [region["name"] for region in collect.KIMI_REGIONS] == ["kimi.com", "kimi.ai"]
+assert collect.requested_providers({}, ["grok"]) == ("grok",)
+assert collect.requested_providers({"only": "codex"}, []) == ("codex",)
+assert collect.requested_providers({}, []) == collect.PROVIDERS
 merged = collect.merge_kimi_rows([
     {
         "source": "cli",
