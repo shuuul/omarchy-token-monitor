@@ -194,6 +194,7 @@ function windowTitle(label, kind, minutes) {
     return "Session"
   }
   if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return "Monthly"
+  if (text.indexOf("roll") >= 0 || text.indexOf("6-hour") >= 0 || text.indexOf("6h") >= 0) return "Rolling"
   if (text.indexOf("day") >= 0 || text.indexOf("daily") >= 0) return "Daily"
   if (text.indexOf("credit") >= 0) return "Weekly"
   if (minutes === 10080) return "Weekly"
@@ -287,6 +288,7 @@ function iconWindows(provider) {
     || findWindowByTitle(windows, "Third-Party")
     || findWindowByTitle(windows, "Third-party")
     || findWindowByTitle(windows, "Third party")
+    || findWindowByTitle(windows, "Rolling")
   if (weekly && session && weekly === session) session = null
   if (!weekly && !session && named.length === 1) weekly = named[0]
   if (!weekly && named.length > 0 && named[0] !== session && String(named[0].title || "") !== "Session")

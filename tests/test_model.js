@@ -131,6 +131,17 @@ const grokIcon = model.iconWindows(grokRow)
 assert.strictEqual(grokIcon.weeklyRemaining, 8)
 assert.strictEqual(grokIcon.sessionRemaining, null)
 assert.strictEqual(model.windowTitle("Credits", "", null), "Weekly")
+assert.strictEqual(model.windowTitle("6-hour", "", 360), "Rolling")
+assert.strictEqual(model.windowTitle("Rolling", "", 360), "Rolling")
+const notionWindows = {
+  windows: [
+    { title: "Rolling", usedPercent: 0 },
+    { title: "Monthly", usedPercent: 0.68 }
+  ]
+}
+const notionIcon = model.iconWindows(notionWindows)
+assert.strictEqual(Math.round(notionIcon.weeklyRemaining), 99)
+assert.strictEqual(notionIcon.sessionRemaining, 100)
 assert.strictEqual(model.windowTitle("GPT-5.3-Codex-Spark session", "", 300), "Codex Spark Session")
 assert.strictEqual(model.windowTitle("GPT-5.3-Codex-Spark weekly", "", 10080), "Codex Spark Weekly")
 const sparkWindows = {

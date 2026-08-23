@@ -411,7 +411,7 @@ def fetch_notion(jars: dict) -> dict:
             "plan": plan,
             "loginMethod": plan or "Notion AI",
         },
-        "primary": window(pct(rolling), 360, None, "6-hour"),
+        "primary": window(pct(rolling), 360, None, "Rolling"),
         "secondary": window(pct(monthly), None, monthly_reset, "Monthly"),
         "updatedAt": iso_now(),
     }
