@@ -34,6 +34,7 @@
       "browser": "chrome",
       "refreshIntervalSec": 300,
       "refreshOnOpen": false,
+      "showRemaining": true,
       "providers": {
         "amp": { "enabled": true },
         "codex": { "enabled": true },
@@ -70,6 +71,13 @@
         "label": "Refresh on open",
         "defaultValue": false,
         "description": "When on, opening the panel fetches every provider. Default off."
+      },
+      {
+        "key": "showRemaining",
+        "type": "boolean",
+        "label": "Show remaining",
+        "defaultValue": true,
+        "description": "When on, meters show leftover quota. When off, they show used."
       }
     ]
   }

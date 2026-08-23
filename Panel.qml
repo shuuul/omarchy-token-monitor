@@ -69,6 +69,10 @@ Panel {
     persistSettings({ refreshOnOpen: !!enabled })
   }
 
+  function setShowRemaining(enabled) {
+    persistSettings({ showRemaining: !!enabled })
+  }
+
   function setProviderEnabled(id, enabled) {
     persistSettings({ providers: Model.withProviderEnabled(root.settings, id, enabled).providers })
   }
@@ -204,8 +208,15 @@ Panel {
     }
 
     readonly property var iconWindows: Model.iconWindows(root.provider)
-    readonly property real weeklyRemaining: iconWindows.weeklyRemaining === null ? -1 : iconWindows.weeklyRemaining / 100
-    readonly property real sessionRemaining: iconWindows.sessionRemaining === null ? -1 : iconWindows.sessionRemaining / 100
+    readonly property bool showRemaining: Model.showRemaining(root.settings)
+    readonly property real weeklyFill: {
+      var value = button.showRemaining ? iconWindows.weeklyRemaining : iconWindows.weeklyUsed
+      return value === null ? -1 : value / 100
+    }
+    readonly property real sessionFill: {
+      var value = button.showRemaining ? iconWindows.sessionRemaining : iconWindows.sessionUsed
+      return value === null ? -1 : value / 100
+    }
     readonly property int markSize: Style.bar.iconCanvas
     readonly property int meterGap: Math.max(2, Math.round(markSize * 0.12))
     readonly property int weeklyHeight: Math.max(4, Math.round((markSize - meterGap) * 0.58))
@@ -252,12 +263,12 @@ Panel {
         height: button.markSize
 
         UsageBar {
-          remaining: button.weeklyRemaining
+          remaining: button.weeklyFill
           barHeight: button.weeklyHeight
         }
 
         UsageBar {
-          remaining: button.sessionRemaining
+          remaining: button.sessionFill
           barHeight: button.sessionHeight
         }
       }
@@ -397,6 +408,16 @@ Panel {
               foreground: root.foreground
               fontFamily: root.fontFamily
               onClicked: root.setRefreshOnOpen(!Model.refreshOnOpen(root.settings))
+            }
+
+            Toggle {
+              width: parent.width
+              label: "Show remaining"
+              description: "Bar and limits show leftover quota. Off shows used."
+              checked: Model.showRemaining(root.settings)
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.setShowRemaining(!Model.showRemaining(root.settings))
             }
 
             Dropdown {
@@ -852,7 +873,10 @@ Panel {
 
       Text {
         id: limitValue
-        text: limitRow.window ? Math.round(limitRow.window.usedPercent) + "%" : "—"
+        text: {
+          var value = Model.displayPercent(limitRow.window, Model.showRemaining(root.settings))
+          return value === null ? "—" : Math.round(value) + "%"
+        }
         color: root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
@@ -863,7 +887,10 @@ Panel {
 
     Meter {
       width: parent.width
-      value: limitRow.window ? limitRow.window.usedPercent / 100 : -1
+      value: {
+        var value = Model.displayPercent(limitRow.window, Model.showRemaining(root.settings))
+        return value === null ? -1 : value / 100
+      }
       alarming: false
     }
 

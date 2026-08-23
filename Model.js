@@ -52,6 +52,12 @@ function refreshOnOpen(settings) {
   return !!(settings && settings.refreshOnOpen)
 }
 
+function showRemaining(settings) {
+  if (!settings || settings.showRemaining === undefined || settings.showRemaining === null)
+    return true
+  return !!settings.showRemaining
+}
+
 function mergeSettings(current, values) {
   var entry = {}
   if (current && typeof current === "object") {
@@ -285,6 +291,18 @@ function remainingPercent(window) {
   return Math.max(0, Math.min(100, 100 - asNumber(window.usedPercent)))
 }
 
+function usedPercent(window) {
+  if (!window) return null
+  if (asNumber(window.usedPercent) !== null)
+    return Math.max(0, Math.min(100, asNumber(window.usedPercent)))
+  if (asNumber(window.remainingPercent) === null) return null
+  return Math.max(0, Math.min(100, 100 - asNumber(window.remainingPercent)))
+}
+
+function displayPercent(window, remaining) {
+  return remaining ? remainingPercent(window) : usedPercent(window)
+}
+
 function findWindowByTitle(windows, title) {
   var wanted = String(title || "").toLowerCase()
   var rows = Array.isArray(windows) ? windows : []
@@ -325,7 +343,9 @@ function iconWindows(provider) {
   if (weekly && session && weekly === session) session = null
   return {
     weeklyRemaining: remainingPercent(weekly),
-    sessionRemaining: remainingPercent(session)
+    sessionRemaining: remainingPercent(session),
+    weeklyUsed: usedPercent(weekly),
+    sessionUsed: usedPercent(session)
   }
 }
 
