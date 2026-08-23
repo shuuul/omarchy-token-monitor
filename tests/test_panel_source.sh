@@ -65,9 +65,11 @@ grep -Fq 'moduleName: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'ipcTarget: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'function refresh(): string' Panel.qml
 grep -Fq 'function next(): string' Panel.qml
-# Opening the panel must not auto-refresh; the fixed-interval timer in
-# Service.qml and explicit user Refresh clicks are the only fetchers.
-! grep -Fq 'usage.refresh("")' Panel.qml
+# Opening the panel fetches every provider only when Settings → Refresh
+# on open is on. The default stays off.
+grep -Fq 'label: "Refresh on open"' Panel.qml
+grep -Fq 'Model.refreshOnOpen(root.settings)' Panel.qml
+grep -Fq 'if (Model.refreshOnOpen(root.settings)) usage.refresh("")' Panel.qml
 grep -Fq 'usage.refresh(onlyId || selectedProviderId)' Panel.qml
 ! grep -Eq '\broot\.state\b' Service.qml Panel.qml
 

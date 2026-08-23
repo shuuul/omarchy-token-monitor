@@ -33,6 +33,7 @@
     "defaults": {
       "browser": "chrome",
       "refreshIntervalSec": 300,
+      "refreshOnOpen": false,
       "providers": {
         "amp": { "enabled": true },
         "codex": { "enabled": true },
@@ -62,6 +63,13 @@
         "step": 30,
         "defaultValue": 300,
         "description": "How often the panel polls every provider. Default 5 minutes."
+      },
+      {
+        "key": "refreshOnOpen",
+        "type": "boolean",
+        "label": "Refresh on open",
+        "defaultValue": false,
+        "description": "When on, opening the panel fetches every provider. Default off."
       }
     ]
   }

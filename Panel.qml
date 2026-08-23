@@ -65,6 +65,10 @@ Panel {
     persistSettings({ refreshIntervalSec: Model.refreshIntervalSec({ refreshIntervalSec: minutes * 60 }) })
   }
 
+  function setRefreshOnOpen(enabled) {
+    persistSettings({ refreshOnOpen: !!enabled })
+  }
+
   function setProviderEnabled(id, enabled) {
     persistSettings({ providers: Model.withProviderEnabled(root.settings, id, enabled).providers })
   }
@@ -142,13 +146,14 @@ Panel {
     if (selectedProviderId !== "") return
     if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
   }
-  // Opening the panel must not fetch: data comes from the fixed-interval
-  // timer in Service.qml and from explicit user Refresh clicks.
+  // Opening the panel fetches only when Settings → Refresh on open is on.
+  // Default is off: data then comes from the interval timer and Refresh.
   onOpenedChanged: if (opened) {
     cursorActive = false
     nowMs = Date.now()
     if (panelFlick) panelFlick.contentY = 0
     if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
+    if (Model.refreshOnOpen(root.settings)) usage.refresh("")
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
   onSettingsChanged: root.reloadSettingsModel()
@@ -382,6 +387,16 @@ Panel {
               foreground: root.foreground
               fontFamily: root.fontFamily
               onChanged: function(value) { root.setRefreshMinutes(parseInt(value, 10)) }
+            }
+
+            Toggle {
+              width: parent.width
+              label: "Refresh on open"
+              description: "Fetch every provider when the panel opens."
+              checked: Model.refreshOnOpen(root.settings)
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.setRefreshOnOpen(!Model.refreshOnOpen(root.settings))
             }
 
             Dropdown {

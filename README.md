@@ -95,6 +95,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | --- | --- | --- |
 | `browser` | `chrome` | `chrome` or `chromium` cookies |
 | `refreshIntervalSec` | `300` | Poll interval (5 minutes). Change it from the panel gear. |
+| `refreshOnOpen` | `false` | Fetch every provider when the panel opens. Off by default. |
 | `providers.<id>.enabled` | `true` | Hide one of the supported providers |
 
 Nested enablement needs the whole object:

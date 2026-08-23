@@ -48,6 +48,10 @@ function browserName(settings) {
   return value === "chromium" ? "chromium" : "chrome"
 }
 
+function refreshOnOpen(settings) {
+  return !!(settings && settings.refreshOnOpen)
+}
+
 function mergeSettings(current, values) {
   var entry = {}
   if (current && typeof current === "object") {

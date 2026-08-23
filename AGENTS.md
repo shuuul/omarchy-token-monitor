@@ -40,7 +40,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Tint provider SVGs with `MultiEffect` to the bar foreground, like symbolic tray icons. Keep the icon and the two bars the same height (`Style.bar.iconCanvas`) and vertically centered together.
 - Never paint usage meters or the bar button in urgent red. A failed refresh must keep the last good snapshot instead of clearing the bars.
 - Update age lives under the selected provider, above Refresh. The Refresh button fetches only that provider and merges it into the existing snapshot.
-- Panel settings live behind the hero gear: refresh interval (default 5 minutes), Chrome/Chromium cookies, and per-provider enablement. Persist with `bar.shell.updateEntryInline`. Settings rows can be dragged to set `providerOrder`; the main provider switch uses that same order.
+- Panel settings live behind the hero gear: refresh interval (default 5 minutes), refresh on open (default off), Chrome/Chromium cookies, and per-provider enablement. Persist with `bar.shell.updateEntryInline`. Settings rows can be dragged to set `providerOrder`; the main provider switch uses that same order. Opening the panel fetches every provider only when refresh on open is enabled.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list. Factory/Droid is already on the allow-list.
 - Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.
 - `collect.py` must inherit the Omarchy shell environment. Do not rewrite `HOME` or `PATH` in the Process argv; an empty `HOME` makes Amp look like `No such file` and every cookie provider look signed out.
