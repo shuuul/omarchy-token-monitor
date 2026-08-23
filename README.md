@@ -11,7 +11,7 @@ Provider IDs match [CodexBar](https://github.com/steipete/CodexBar) exactly.
 The panel does not run the CodexBar CLI. It reads the same local sessions this
 machine already has: Chrome cookies, CLI auth files, and the Linux keyring.
 
-![Token Monitor panel showing Droid limits](assets/screenshot.png)
+<img src="assets/screenshot.png" alt="Token Monitor panel showing Droid limits" height="560">
 
 ## Requirements
 
