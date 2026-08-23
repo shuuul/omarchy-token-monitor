@@ -719,20 +719,6 @@ Panel {
             }
           }
 
-          Column {
-            visible: !root.settingsOpen && !!root.provider && root.provider.accountEmail !== "" && !Model.hideEmail(root.settings)
-            width: parent.width
-
-            Text {
-              width: parent.width
-              text: root.provider ? root.provider.accountEmail : ""
-              color: root.dim
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
-              wrapMode: Text.WordWrap
-            }
-          }
-
           PanelSeparator {
             visible: creditsSection.visible || limitsSection.visible
             foreground: root.foreground
