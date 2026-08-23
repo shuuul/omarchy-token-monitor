@@ -36,7 +36,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Provider icons in `assets/<id>.svg` must come from CodexBar `Sources/CodexBar/Resources/ProviderIcon-<id>.svg`, with fills rewritten to `currentColor`. Do not invent monograms.
 - Kimi has two regions. Check both: `kimi.com` (China) and `kimi.ai` (international). Pair tokens/cookies only with the matching host.
 - Plan labels: Codex `prolite` is Pro 5x, `pro` is Pro 20x. Kimi billed tier is `/coding/v1/me` `user_level_name` (Allegretto, not `membership.level`). Notion billed tier is space `subscription_tier`. Grok billed tier is `/v1/settings` `subscription_tier_display` when present, otherwise `accounts.x.ai` `xSubscriptionType` (Premium → X Premium). Do not invent Free.
-- The bar icon and label follow the panel's selected provider. Without a selection they still fall back to the fullest usage window.
+- The bar shows the selected provider icon plus two remaining meters: weekly on top, session underneath. Do not put the provider name or percent text in the bar slot.
 - Update age lives under the selected provider, above Refresh. The Refresh button fetches only that provider and merges it into the existing snapshot.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list.
 - Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.

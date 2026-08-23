@@ -214,6 +214,36 @@ function bindingWindow(windows) {
   return best
 }
 
+function remainingPercent(window) {
+  if (!window) return null
+  if (asNumber(window.remainingPercent) !== null)
+    return Math.max(0, Math.min(100, asNumber(window.remainingPercent)))
+  if (asNumber(window.usedPercent) === null) return null
+  return Math.max(0, Math.min(100, 100 - asNumber(window.usedPercent)))
+}
+
+function findWindowByTitle(windows, title) {
+  var wanted = String(title || "").toLowerCase()
+  var rows = Array.isArray(windows) ? windows : []
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].title || "").toLowerCase() === wanted) return rows[i]
+  }
+  return null
+}
+
+function iconWindows(provider) {
+  var windows = provider && Array.isArray(provider.windows) ? provider.windows : []
+  var weekly = findWindowByTitle(windows, "Weekly")
+  var session = findWindowByTitle(windows, "Session")
+  if (!weekly && windows.length > 1) weekly = windows[1]
+  if (!session && windows.length > 0) session = windows[0]
+  if (!weekly) weekly = bindingWindow(windows)
+  return {
+    weeklyRemaining: remainingPercent(weekly),
+    sessionRemaining: remainingPercent(session)
+  }
+}
+
 function firstPaceSummary(pace) {
   if (!pace || typeof pace !== "object") return ""
   var keys = ["primary", "secondary", "tertiary"]

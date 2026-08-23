@@ -116,12 +116,16 @@ Panel {
       else root.toggle()
     }
 
+    readonly property var iconWindows: Model.iconWindows(root.provider)
+    readonly property real weeklyRemaining: iconWindows.weeklyRemaining === null ? -1 : iconWindows.weeklyRemaining / 100
+    readonly property real sessionRemaining: iconWindows.sessionRemaining === null ? -1 : iconWindows.sessionRemaining / 100
+
     Item {
       id: barSlot
       anchors.verticalCenter: parent.verticalCenter
       anchors.horizontalCenter: parent.horizontalCenter
-      width: barIcon.width + Style.space(6) + barMetrics.width
-      height: Math.max(barIcon.height, barLabel.height)
+      width: barIcon.width + Style.space(6) + usageBars.width
+      height: Math.max(barIcon.height, usageBars.height)
 
       Image {
         id: barIcon
@@ -136,25 +140,23 @@ Panel {
         asynchronous: false
       }
 
-      Text {
-        id: barLabel
+      Column {
+        id: usageBars
         anchors.left: barIcon.right
         anchors.leftMargin: Style.space(6)
         anchors.verticalCenter: parent.verticalCenter
-        width: barMetrics.width
-        text: usage.barLabelFor(selectedProviderId)
-        color: button.active ? button.activeColor : button.foreground
-        font.family: button.fontFamily
-        font.pixelSize: button.fontSize
-        renderType: Text.NativeRendering
-        verticalAlignment: Text.AlignVCenter
-      }
+        spacing: Math.max(2, Math.round(Style.space(2)))
+        width: Style.space(18)
 
-      TextMetrics {
-        id: barMetrics
-        font.family: button.fontFamily
-        font.pixelSize: button.fontSize
-        text: Model.longestBarLabel(root.providers, usage.busy && !usage.hasSnapshot)
+        UsageBar {
+          remaining: button.weeklyRemaining
+          barHeight: Math.max(4, Math.round(Style.space(5)))
+        }
+
+        UsageBar {
+          remaining: button.sessionRemaining
+          barHeight: Math.max(3, Math.round(Style.space(4)))
+        }
       }
     }
   }
@@ -461,6 +463,35 @@ Panel {
       color: root.dim
       font.family: root.fontFamily
       font.pixelSize: Style.font.caption
+    }
+  }
+
+  component UsageBar: Item {
+    id: usageBar
+    property real remaining: -1
+    property real barHeight: Math.max(4, Math.round(Style.space(5)))
+
+    width: parent ? parent.width : Style.space(18)
+    implicitHeight: barHeight
+    height: barHeight
+
+    Rectangle {
+      id: usageTrack
+      anchors.fill: parent
+      radius: height / 2
+      color: root.alpha(button.foreground, 0.28)
+      border.width: 1
+      border.color: root.alpha(button.foreground, 0.44)
+    }
+
+    Rectangle {
+      visible: usageBar.remaining >= 0
+      anchors.left: usageTrack.left
+      anchors.verticalCenter: usageTrack.verticalCenter
+      height: usageTrack.height
+      radius: usageTrack.radius
+      width: usageTrack.width * root.clamp(usageBar.remaining, 0, 1)
+      color: button.active ? button.activeColor : button.foreground
     }
   }
 
