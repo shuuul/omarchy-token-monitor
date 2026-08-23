@@ -73,6 +73,10 @@ Panel {
     persistSettings({ showRemaining: !!enabled })
   }
 
+  function setHideEmail(enabled) {
+    persistSettings({ hideEmail: !!enabled })
+  }
+
   function setProviderEnabled(id, enabled) {
     persistSettings({ providers: Model.withProviderEnabled(root.settings, id, enabled).providers })
   }
@@ -133,7 +137,7 @@ Panel {
   }
 
   function heroMeta(p) {
-    return Model.heroMeta(p)
+    return Model.heroMeta(p, root.settings)
   }
 
   function creditsText(p) {
@@ -420,6 +424,16 @@ Panel {
               onClicked: root.setShowRemaining(!Model.showRemaining(root.settings))
             }
 
+            Toggle {
+              width: parent.width
+              label: "Hide email"
+              description: "Do not show the account email on the panel."
+              checked: Model.hideEmail(root.settings)
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.setHideEmail(!Model.hideEmail(root.settings))
+            }
+
             Dropdown {
               width: parent.width
               label: "Browser cookies"
@@ -690,7 +704,7 @@ Panel {
           }
 
           Column {
-            visible: !root.settingsOpen && !!root.provider && root.provider.accountEmail !== ""
+            visible: !root.settingsOpen && !!root.provider && root.provider.accountEmail !== "" && !Model.hideEmail(root.settings)
             width: parent.width
 
             Text {

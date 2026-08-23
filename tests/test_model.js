@@ -246,6 +246,9 @@ assert.strictEqual(model.prettyPlan("cursor", "pro_plus"), "Pro+")
 assert.strictEqual(model.prettyPlan("zed", "zed_student"), "Student")
 assert.strictEqual(model.prettyPlan("factory", "team_annual"), "Team Annual")
 assert.strictEqual(model.heroMeta(codex), "Plus · user@example.com")
+assert.strictEqual(model.heroMeta(codex, { hideEmail: true }), "Plus")
+assert.strictEqual(model.hideEmail({}), false)
+assert.strictEqual(model.hideEmail({ hideEmail: true }), true)
 assert.strictEqual(
   model.formatDuration(2 * 3600 * 1000 + 12 * 60 * 1000),
   "2h 12m",

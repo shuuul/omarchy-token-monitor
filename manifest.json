@@ -35,6 +35,7 @@
       "refreshIntervalSec": 300,
       "refreshOnOpen": false,
       "showRemaining": true,
+      "hideEmail": false,
       "providers": {
         "amp": { "enabled": true },
         "codex": { "enabled": true },
@@ -78,6 +79,13 @@
         "label": "Show remaining",
         "defaultValue": true,
         "description": "When on, meters show leftover quota. When off, they show used."
+      },
+      {
+        "key": "hideEmail",
+        "type": "boolean",
+        "label": "Hide email",
+        "defaultValue": false,
+        "description": "When on, the panel does not show the account email."
       }
     ]
   }

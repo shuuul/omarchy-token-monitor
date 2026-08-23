@@ -98,6 +98,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | `refreshIntervalSec` | `300` | Poll interval (5 minutes). Change it from the panel gear. |
 | `refreshOnOpen` | `false` | Fetch every provider when the panel opens. Off by default. |
 | `showRemaining` | `true` | Bar and limits show leftover quota. Off shows used. |
+| `hideEmail` | `false` | Hide the account email on the panel. |
 | `providers.<id>.enabled` | `true` | Hide one of the supported providers |
 
 Nested enablement needs the whole object:

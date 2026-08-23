@@ -58,6 +58,10 @@ function showRemaining(settings) {
   return !!settings.showRemaining
 }
 
+function hideEmail(settings) {
+  return !!(settings && settings.hideEmail)
+}
+
 function mergeSettings(current, values) {
   var entry = {}
   if (current && typeof current === "object") {
@@ -696,13 +700,14 @@ function prettyPlan(providerId, raw) {
   }).join(" · ")
 }
 
-function heroMeta(provider) {
+function heroMeta(provider, settings) {
   if (!provider) return ""
   if (provider.error) return provider.error
   var plan = prettyPlan(provider.id, provider.plan)
-  if (plan && provider.accountEmail) return plan + " · " + provider.accountEmail
+  var email = hideEmail(settings) ? "" : String(provider.accountEmail || "")
+  if (plan && email) return plan + " · " + email
   if (plan) return plan
-  if (provider.accountEmail) return provider.accountEmail
+  if (email) return email
   if (provider.source) return provider.source
   return "Waiting for usage"
 }
