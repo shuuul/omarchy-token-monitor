@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "shuuul.token-monitor",
+  "name": "Token Monitor",
+  "version": "0.1.0",
+  "author": "shuuul",
+  "license": "MIT",
+  "description": "CodexBar quotas for Amp, Codex, Kimi Code, Cursor, Grok, Notion AI, and Zed in the Omarchy bar.",
+  "kinds": ["bar-widget"],
+  "activation": "on-demand",
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Token Monitor",
+    "description": "One bar meter and one panel: CodexBar session, weekly, credits, and pace for the seven supported providers.",
+    "category": "AI",
+    "aliases": [
+      "codexbar",
+      "token monitor",
+      "amp",
+      "codex",
+      "kimi",
+      "cursor",
+      "grok",
+      "notion",
+      "zed"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "codexbarPath": "codexbar",
+      "refreshIntervalSec": 300,
+      "identityMode": "full",
+      "providers": {
+        "amp": { "enabled": true },
+        "codex": { "enabled": true },
+        "kimi": { "enabled": true },
+        "cursor": { "enabled": true },
+        "grok": { "enabled": true },
+        "notion": { "enabled": true },
+        "zed": { "enabled": true }
+      }
+    },
+    "schema": [
+      {
+        "key": "codexbarPath",
+        "type": "string",
+        "label": "CodexBar command",
+        "defaultValue": "codexbar",
+        "description": "Command or absolute path for the CodexBar Linux CLI."
+      },
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Refresh interval (seconds)",
+        "min": 30,
+        "max": 3600,
+        "step": 30,
+        "defaultValue": 300
+      },
+      {
+        "key": "identityMode",
+        "type": "enum",
+        "label": "Account identity",
+        "options": ["full", "redacted"],
+        "defaultValue": "full",
+        "description": "Passed to `codexbar dashboard --identity`. Redacted hides email local parts."
+      }
+    ]
+  }
+}
