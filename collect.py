@@ -264,8 +264,10 @@ def fetch_codex() -> dict:
     for extra in data.get("additional_rate_limits") or []:
         extra_rate = extra.get("rate_limit") or {}
         title = extra.get("display_name") or extra.get("limit_name") or extra.get("model") or "Extra"
-        primary = map_window(extra_rate.get("primary_window"), f"{title} session")
-        secondary = map_window(extra_rate.get("secondary_window"), f"{title} weekly")
+        if "spark" in title.lower():
+            title = "Codex Spark"
+        primary = map_window(extra_rate.get("primary_window"), f"{title} Session")
+        secondary = map_window(extra_rate.get("secondary_window"), f"{title} Weekly")
         if primary:
             extras.append({"id": extra.get("id") or "extra", "title": primary["label"], "window": primary})
         if secondary:
@@ -279,7 +281,7 @@ def fetch_codex() -> dict:
             "loginMethod": data.get("plan_type") or "",
             "providerID": "codex",
         },
-        "primary": map_window(rate.get("primary_window"), "Session"),
+        "primary": map_window(rate.get("primary_window"), "Weekly" if (rate.get("primary_window") or {}).get("limit_window_seconds", 0) >= 6 * 24 * 3600 else "Session"),
         "secondary": map_window(rate.get("secondary_window"), "Weekly"),
         "tertiary": None,
         "extraRateWindows": extras,

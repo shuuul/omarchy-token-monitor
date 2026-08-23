@@ -131,6 +131,18 @@ const grokIcon = model.iconWindows(grokRow)
 assert.strictEqual(grokIcon.weeklyRemaining, 8)
 assert.strictEqual(grokIcon.sessionRemaining, null)
 assert.strictEqual(model.windowTitle("Credits", "", null), "Weekly")
+assert.strictEqual(model.windowTitle("GPT-5.3-Codex-Spark session", "", 300), "Codex Spark Session")
+assert.strictEqual(model.windowTitle("GPT-5.3-Codex-Spark weekly", "", 10080), "Codex Spark Weekly")
+const sparkWindows = {
+  windows: [
+    { title: "Weekly", usedPercent: 10 },
+    { title: "Codex Spark Session", usedPercent: 0 },
+    { title: "Codex Spark Weekly", usedPercent: 13 }
+  ]
+}
+const sparkIcon = model.iconWindows(sparkWindows)
+assert.strictEqual(sparkIcon.weeklyRemaining, 90)
+assert.strictEqual(sparkIcon.sessionRemaining, null)
 assert.strictEqual(model.prettyPlan("grok", "SuperGrok Heavy"), "SuperGrok Heavy")
 assert.strictEqual(model.prettyPlan("grok", "Premium"), "X Premium")
 assert.strictEqual(model.prettyPlan("grok", "Free"), "Free")

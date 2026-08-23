@@ -185,8 +185,14 @@ function titleCaseLabel(label) {
 function windowTitle(label, kind, minutes) {
   var text = String(label || "").toLowerCase()
   var kindText = String(kind || "").toLowerCase()
-  if (kindText === "weekly" || text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0) return "Weekly"
-  if (kindText === "session" || text.indexOf("session") >= 0) return "Session"
+  if (kindText === "weekly" || text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0) {
+    if (text.indexOf("spark") >= 0) return "Codex Spark Weekly"
+    return "Weekly"
+  }
+  if (kindText === "session" || text.indexOf("session") >= 0) {
+    if (text.indexOf("spark") >= 0) return "Codex Spark Session"
+    return "Session"
+  }
   if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return "Monthly"
   if (text.indexOf("day") >= 0 || text.indexOf("daily") >= 0) return "Daily"
   if (text.indexOf("credit") >= 0) return "Weekly"
@@ -275,15 +281,18 @@ function iconWindows(provider) {
     if (title && title !== "Plan") named.push(windows[i])
   }
   var weekly = findWindowByTitle(windows, "Weekly")
-    || findWindowByTitle(windows, "Cursor models")
+    || findWindowByTitle(windows, "Cursor Models")
     || findWindowByTitle(windows, "Monthly")
   var session = findWindowByTitle(windows, "Session")
+    || findWindowByTitle(windows, "Third-Party")
     || findWindowByTitle(windows, "Third-party")
     || findWindowByTitle(windows, "Third party")
   if (weekly && session && weekly === session) session = null
   if (!weekly && !session && named.length === 1) weekly = named[0]
-  if (!weekly && named.length > 0 && named[0] !== session) weekly = named[0]
-  if (!session && named.length > 1 && named[1] !== weekly) session = named[1]
+  if (!weekly && named.length > 0 && named[0] !== session && String(named[0].title || "") !== "Session")
+    weekly = named[0]
+  if (!session && named.length > 1 && named[1] !== weekly && String(named[1].title || "").indexOf("Spark") < 0)
+    session = named[1]
   if (weekly && session && weekly === session) session = null
   return {
     weeklyRemaining: remainingPercent(weekly),
