@@ -99,6 +99,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | `refreshOnOpen` | `false` | Fetch every provider when the panel opens. Off by default. |
 | `showRemaining` | `true` | Bar and limits show leftover quota. Off shows used. |
 | `hideEmail` | `false` | Hide the account email on the panel. |
+| `selectedProviderId` | `""` | Last provider shown in the bar and panel. |
 | `providers.<id>.enabled` | `true` | Hide one of the supported providers |
 
 Nested enablement needs the whole object:

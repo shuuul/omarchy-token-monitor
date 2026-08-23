@@ -39,10 +39,22 @@ Panel {
   function clamp(v, lo, hi) { return Model.clamp(v, lo, hi) }
   function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
 
+  function setSelectedProvider(id) {
+    var next = String(id || "")
+    selectedProviderId = next
+    if (next && Model.rememberedProviderId(root.settings) !== next)
+      persistSettings({ selectedProviderId: next })
+  }
+
   function selectProvider(index) {
     if (providers.length === 0) return
     var wrapped = ((index % providers.length) + providers.length) % providers.length
-    selectedProviderId = providers[wrapped].id
+    setSelectedProvider(providers[wrapped].id)
+  }
+
+  function restoreSelectedProvider() {
+    var next = Model.resolveSelectedProviderId(root.settings, providers, selectedProviderId)
+    if (next && next !== selectedProviderId) selectedProviderId = next
   }
 
   function refreshNow(onlyId) {
@@ -150,22 +162,26 @@ Panel {
   implicitHeight: button.implicitHeight
 
   onProviderIndexChanged: if (panelFlick) panelFlick.contentY = 0
-  onProvidersChanged: {
-    if (selectedProviderId !== "") return
-    if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
-  }
+  onProvidersChanged: root.restoreSelectedProvider()
   // Opening the panel fetches only when Settings → Refresh on open is on.
   // Default is off: data then comes from the interval timer and Refresh.
+  // Do not jump to the most-used headline; keep the last selected provider.
   onOpenedChanged: if (opened) {
     cursorActive = false
     nowMs = Date.now()
     if (panelFlick) panelFlick.contentY = 0
-    if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id
+    root.restoreSelectedProvider()
     if (Model.refreshOnOpen(root.settings)) usage.refresh("")
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
-  onSettingsChanged: root.reloadSettingsModel()
-  Component.onCompleted: root.reloadSettingsModel()
+  onSettingsChanged: {
+    root.reloadSettingsModel()
+    root.restoreSelectedProvider()
+  }
+  Component.onCompleted: {
+    root.reloadSettingsModel()
+    root.restoreSelectedProvider()
+  }
 
   ListModel {
     id: settingsProviderModel

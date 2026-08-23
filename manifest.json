@@ -36,6 +36,7 @@
       "refreshOnOpen": false,
       "showRemaining": true,
       "hideEmail": false,
+      "selectedProviderId": "",
       "providers": {
         "amp": { "enabled": true },
         "codex": { "enabled": true },

@@ -62,6 +62,25 @@ function hideEmail(settings) {
   return !!(settings && settings.hideEmail)
 }
 
+function rememberedProviderId(settings) {
+  return String(settings && settings.selectedProviderId ? settings.selectedProviderId : "")
+}
+
+function resolveSelectedProviderId(settings, providers, currentId) {
+  var rows = Array.isArray(providers) ? providers : []
+  function present(id) {
+    var wanted = String(id || "")
+    if (wanted === "") return ""
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i] && rows[i].id === wanted) return wanted
+    }
+    return ""
+  }
+  return present(rememberedProviderId(settings))
+    || present(currentId)
+    || (rows.length && rows[0] && rows[0].id ? rows[0].id : "")
+}
+
 function mergeSettings(current, values) {
   var entry = {}
   if (current && typeof current === "object") {

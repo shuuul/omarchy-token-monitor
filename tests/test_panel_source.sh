@@ -75,7 +75,10 @@ grep -Fq 'ipcTarget: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'function refresh(): string' Panel.qml
 grep -Fq 'function next(): string' Panel.qml
 # Opening the panel fetches every provider only when Settings → Refresh
-# on open is on. The default stays off.
+# on open is on. The default stays off. Keep the last selected provider
+# instead of jumping to the most-used headline.
+grep -Fq 'root.restoreSelectedProvider()' Panel.qml
+! grep -Fq 'if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id' Panel.qml
 grep -Fq 'label: "Refresh on open"' Panel.qml
 grep -Fq 'label: "Show remaining"' Panel.qml
 grep -Fq 'label: "Hide email"' Panel.qml

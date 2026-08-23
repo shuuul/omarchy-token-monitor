@@ -249,6 +249,20 @@ assert.strictEqual(model.heroMeta(codex), "Plus · user@example.com")
 assert.strictEqual(model.heroMeta(codex, { hideEmail: true }), "Plus")
 assert.strictEqual(model.hideEmail({}), false)
 assert.strictEqual(model.hideEmail({ hideEmail: true }), true)
+assert.strictEqual(model.rememberedProviderId({}), "")
+assert.strictEqual(model.rememberedProviderId({ selectedProviderId: "codex" }), "codex")
+assert.strictEqual(
+  model.resolveSelectedProviderId({ selectedProviderId: "codex" }, [{ id: "grok" }, { id: "codex" }], "grok"),
+  "codex",
+)
+assert.strictEqual(
+  model.resolveSelectedProviderId({ selectedProviderId: "missing" }, [{ id: "cursor" }, { id: "grok" }], "cursor"),
+  "cursor",
+)
+assert.strictEqual(
+  model.resolveSelectedProviderId({}, [{ id: "amp" }, { id: "grok" }], ""),
+  "amp",
+)
 assert.strictEqual(
   model.formatDuration(2 * 3600 * 1000 + 12 * 60 * 1000),
   "2h 12m",
