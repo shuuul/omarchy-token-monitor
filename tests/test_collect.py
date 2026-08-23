@@ -24,6 +24,10 @@ payload = bytes.fromhex("0000000056") + b"\nT" + b"\r\x00\x00\x82B"
 # The live parser is covered by the live collector; keep a structural check here.
 row = collect.row("grok", source="chrome", error="x")
 assert row["error"]["message"] == "x"
+assert collect.kimi_token_fresh({"expires_at": 1}, now=100) is False
+assert collect.kimi_token_fresh({"expires_at": 200}, now=100) is True
 source = (ROOT / "collect.py").read_text()
 assert "WHERE name IN" in source
+assert "auth.kimi.com/api/oauth/token" in source
+assert "zed-github-account" in source
 print("collect tests passed")

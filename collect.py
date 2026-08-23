@@ -17,7 +17,9 @@ import ssl
 import struct
 import subprocess
 import tempfile
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -495,24 +497,67 @@ def fetch_grok(jars: dict) -> dict:
         return row("grok", source="chrome", error="Could not parse Grok billing payload.")
 
 
-def fetch_kimi(jars: dict) -> dict:
-    cred_path = HOME / ".kimi-code/credentials/kimi-code.json"
-    token = None
-    source = "cli"
-    if cred_path.exists():
-        creds = json.loads(cred_path.read_text())
-        token = creds.get("access_token")
-    if not token:
-        token = cookie_value(jars, "kimi-auth", ["www.kimi.com", ".kimi.com", "kimi.com"])
-        source = "chrome"
-    if not token:
-        return row("kimi", source="cli", error="Sign in with Kimi Code CLI, or open kimi.com in Chrome.")
+KIMI_CLIENT_ID = "17e5f671-d194-4dfb-9706-5516cb48c098"
+KIMI_TOKEN_URL = "https://auth.kimi.com/api/oauth/token"
+
+
+def kimi_token_fresh(creds: dict, now: float | None = None) -> bool:
+    expires_at = creds.get("expires_at")
+    if not expires_at:
+        return False
+    now = time.time() if now is None else now
+    return float(expires_at) - now > 60
+
+
+def write_kimi_creds(path: Path, creds: dict) -> None:
+    path.parent.mkdir(mode=0o700, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(creds, indent=2) + "\n")
+    tmp.chmod(0o600)
+    tmp.replace(path)
+
+
+def refresh_kimi_creds(creds: dict) -> dict | None:
+    refresh = creds.get("refresh_token")
+    if not refresh:
+        return None
+    body = urllib.parse.urlencode({
+        "client_id": KIMI_CLIENT_ID,
+        "grant_type": "refresh_token",
+        "refresh_token": refresh,
+    }).encode()
+    status, raw, _ = http(
+        KIMI_TOKEN_URL,
+        method="POST",
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+        },
+        body=body,
+    )
+    if status != 200:
+        return None
+    data = json.loads(raw)
+    if not data.get("access_token"):
+        return None
+    expires_in = int(data.get("expires_in") or 900)
+    return {
+        "access_token": data["access_token"],
+        "refresh_token": data.get("refresh_token") or refresh,
+        "expires_at": int(time.time()) + expires_in,
+        "scope": data.get("scope") or creds.get("scope") or "kimi-code",
+        "token_type": data.get("token_type") or "Bearer",
+        "expires_in": expires_in,
+    }
+
+
+def kimi_usage_from_token(token: str, source: str) -> dict:
     status, body, _ = http(
         "https://api.kimi.com/coding/v1/usages",
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
     )
     if status != 200:
-        return row("kimi", source=source, error="Kimi token expired. Run the Kimi Code CLI login again.")
+        return row("kimi", source=source, error="Kimi token expired. Run `kimi login`.")
     data = json.loads(body)
     weekly = data.get("usage") or {}
     rolling = None
@@ -538,8 +583,114 @@ def fetch_kimi(jars: dict) -> dict:
     return row("kimi", source=source, usage=usage)
 
 
+def fetch_kimi(jars: dict) -> dict:
+    cred_path = HOME / ".kimi-code/credentials/kimi-code.json"
+    if cred_path.exists():
+        creds = json.loads(cred_path.read_text())
+        if not kimi_token_fresh(creds):
+            refreshed = refresh_kimi_creds(creds)
+            if refreshed:
+                write_kimi_creds(cred_path, refreshed)
+                creds = refreshed
+        token = creds.get("access_token")
+        if token:
+            result = kimi_usage_from_token(token, "cli")
+            if not result.get("error"):
+                return result
+    cookie = cookie_value(jars, "kimi-auth", ["www.kimi.com", ".kimi.com", "kimi.com"])
+    if cookie:
+        return kimi_usage_from_token(cookie, "chrome")
+    return row("kimi", source="cli", error="Sign in with `kimi login`, or open kimi.com in Chrome.")
+
+
+def zed_keyring_items() -> list[tuple[str, str]]:
+    dest = "org.freedesktop.secrets"
+    collection = "/org/freedesktop/secrets/collection/Default_5fkeyring"
+    listing = subprocess.run(
+        ["busctl", "--user", "get-property", dest, collection, "org.freedesktop.Secret.Collection", "Items"],
+        capture_output=True,
+        text=True,
+        timeout=5,
+        check=False,
+    )
+    if listing.returncode != 0:
+        return []
+    paths = re.findall(r'"(/org/freedesktop/secrets/collection/[^"]+)"', listing.stdout)
+    found = []
+    for path in paths:
+        label = subprocess.run(
+            ["busctl", "--user", "get-property", dest, path, "org.freedesktop.Secret.Item", "Label"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if "zed-github-account" not in label.stdout:
+            continue
+        attrs = subprocess.run(
+            ["busctl", "--user", "get-property", dest, path, "org.freedesktop.Secret.Item", "Attributes"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        url = re.search(r'"url"\s+"([^"]+)"', attrs.stdout)
+        user = re.search(r'"username"\s+"([^"]+)"', attrs.stdout)
+        if url and user:
+            found.append((url.group(1), user.group(1)))
+    return found
+
+
 def fetch_zed() -> dict:
-    return row("zed", source="local", error="Zed Linux credentials are not in Chrome cookies. Sign-in lives in the Zed app keyring.")
+    items = zed_keyring_items()
+    if not items:
+        return row("zed", source="keyring", error="Sign in to Zed (Command Palette → client: sign in).")
+    url, user_id = items[0]
+    secret = subprocess.run(
+        ["secret-tool", "lookup", "url", url],
+        capture_output=True,
+        timeout=8,
+        check=False,
+    )
+    if secret.returncode != 0 or not secret.stdout:
+        return row("zed", source="keyring", error="Could not read the Zed keyring item.")
+    token = secret.stdout.decode().rstrip("\n")
+    status, body, _ = http(
+        "https://cloud.zed.dev/client/users/me",
+        headers={
+            "Authorization": f"{user_id} {token}",
+            "Accept": "application/json",
+        },
+    )
+    if status != 200:
+        return row("zed", source="keyring", error=f"Zed cloud API returned {status}.")
+    data = json.loads(body)
+    user = data.get("user") or {}
+    plan = data.get("plan") or {}
+    predictions = (plan.get("usage") or {}).get("edit_predictions") or {}
+    used = predictions.get("used")
+    limit = predictions.get("limit")
+    used_percent = None
+    label = "Edit predictions"
+    if isinstance(limit, str) and limit.lower() == "unlimited":
+        used_percent = 0
+        label = f"Unlimited ({used or 0} used)"
+    elif limit not in (None, 0) and used is not None:
+        used_percent = float(used) / float(limit) * 100.0
+        label = f"{used} / {limit} predictions"
+    period = plan.get("subscription_period") or {}
+    usage = {
+        "accountEmail": user.get("github_login"),
+        "loginMethod": plan.get("plan_v3") or plan.get("plan"),
+        "identity": {
+            "providerID": "zed",
+            "accountEmail": user.get("github_login"),
+            "loginMethod": plan.get("plan_v3") or plan.get("plan"),
+        },
+        "primary": window(used_percent, None, period.get("ended_at"), label),
+        "updatedAt": iso_now(),
+    }
+    return row("zed", source="keyring", usage=usage)
 
 
 def collect(settings: dict | None = None) -> list[dict]:
