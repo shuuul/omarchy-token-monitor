@@ -8,6 +8,26 @@
 - Validate: `make validate`
 - Local load without git: symlink into `~/.config/omarchy/plugins/shuuul.token-monitor`
 
+## Reload after a change — do this before asking the user to check
+
+Quickshell caches compiled QML. A file save or `rescanPlugins` is **not** enough
+for `Panel.qml` / `Service.qml` edits. The bar will keep showing the old layout
+(for example seven monogram letters) until the shell process restarts.
+
+After any QML, `collect.py`, or `manifest.json` change:
+
+1. `make test`
+2. `omarchy restart shell`
+3. Wait until `omarchy-shell shell ping` prints `ok` (about 2 seconds)
+4. `omarchy-shell shuuul.token-monitor refresh`
+5. Confirm the cache is new: `ls -lt ~/.cache/quickshell/qmlcache | head`
+6. Then tell the user to click Token Monitor
+
+`omarchy-shell shell rescanPlugins` only rediscovers plugin folders. Use it when
+the symlink or `manifest.json` id changed, then still do step 2.
+
+Do not ask the user to verify a UI change until step 2 has run in this session.
+
 ## Conventions
 
 - Use Conventional Commits: `<type>(<scope>): <summary>`.
