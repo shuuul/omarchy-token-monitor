@@ -24,9 +24,11 @@ grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 grep -Fq '{ id: "factory", name: "Droid"' Providers.js
 [[ "$(grep -c '{ id: "' Providers.js)" -eq 8 ]]
 
-# Provider marks come from CodexBar ProviderIcon-*.svg, tinted with currentColor.
+# Provider marks come from CodexBar ProviderIcon-*.svg. Qt paints currentColor
+# as black, so fills must be white for MultiEffect to tint the bar foreground.
 for id in amp codex kimi cursor grok notion zed factory; do
-  grep -Fq 'currentColor' "assets/${id}.svg"
+  grep -Fq '#ffffff' "assets/${id}.svg"
+  ! grep -Fq 'currentColor' "assets/${id}.svg"
 done
 # Distinct official marks, not the old monogram placeholders.
 ! grep -Fq 'M12 3 4 21h3.1l1.5-3.4h6.8L16.9 21H20L12 3zm0 6.2' assets/amp.svg

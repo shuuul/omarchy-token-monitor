@@ -174,7 +174,7 @@ Panel {
         anchors.fill: barIcon
         source: barIcon
         colorization: 1.0
-        colorizationColor: button.foreground
+        colorizationColor: root.foreground
       }
 
       Column {
