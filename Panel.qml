@@ -108,33 +108,53 @@ Panel {
     tooltipText: usage.barTooltip
     active: root.alarming
     horizontalMargin: 10
-    fixedWidth: barRow.implicitWidth + Style.space(16)
+    hasVisualContent: true
+    fixedWidth: barSlot.width + Style.space(16)
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.RightButton) root.refreshNow()
       else if (buttonCode === Qt.MiddleButton) root.selectProvider(root.providerIndex + 1)
       else root.toggle()
     }
 
-    Row {
-      id: barRow
-      anchors.centerIn: parent
-      spacing: Style.space(6)
+    Item {
+      id: barSlot
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.horizontalCenter: parent.horizontalCenter
+      width: barIcon.width + Style.space(6) + barMetrics.width
+      height: Math.max(barIcon.height, barLabel.height)
 
       Image {
         id: barIcon
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
         width: Style.font.body
         height: Style.font.body
         source: Qt.resolvedUrl("assets/" + usage.barIconIdFor(selectedProviderId) + ".svg")
         sourceSize.width: Style.font.body * 2
         sourceSize.height: Style.font.body * 2
         fillMode: Image.PreserveAspectFit
+        asynchronous: false
       }
 
       Text {
+        id: barLabel
+        anchors.left: barIcon.right
+        anchors.leftMargin: Style.space(6)
+        anchors.verticalCenter: parent.verticalCenter
+        width: barMetrics.width
         text: usage.barLabelFor(selectedProviderId)
         color: button.active ? button.activeColor : button.foreground
         font.family: button.fontFamily
         font.pixelSize: button.fontSize
+        renderType: Text.NativeRendering
+        verticalAlignment: Text.AlignVCenter
+      }
+
+      TextMetrics {
+        id: barMetrics
+        font.family: button.fontFamily
+        font.pixelSize: button.fontSize
+        text: Model.longestBarLabel(root.providers, usage.busy && !usage.hasSnapshot)
       }
     }
   }

@@ -322,6 +322,27 @@ function barCaption(provider) {
   return provider.name || ""
 }
 
+function barSlotLabels(providers, loading) {
+  var rows = Array.isArray(providers) ? providers : []
+  var labels = []
+  if (loading && rows.length === 0) return ["…"]
+  for (var i = 0; i < rows.length; i++) {
+    var caption = barCaption(rows[i])
+    if (caption) labels.push(caption)
+  }
+  if (labels.length === 0) labels.push("Token Monitor")
+  return labels
+}
+
+function longestBarLabel(providers, loading) {
+  var labels = barSlotLabels(providers, loading)
+  var best = labels.length ? labels[0] : "Token Monitor"
+  for (var i = 1; i < labels.length; i++) {
+    if (labels[i].length > best.length) best = labels[i]
+  }
+  return best
+}
+
 function barText(providers, loading, selectedId) {
   if (loading && (!providers || providers.length === 0)) return "…"
   var headline = barHeadline(providers, selectedId)

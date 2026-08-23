@@ -25,6 +25,8 @@ grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 
 # Panel wiring follows the Omarchy agents / clock contract.
 grep -Fq 'text: modelData.name' Panel.qml
+grep -Fq 'longestBarLabel' Panel.qml
+grep -Fq 'anchors.verticalCenter: parent.verticalCenter' Panel.qml
 grep -Fq 'formatUpdatedAt' Panel.qml
 grep -Fq 'Refresh " + root.provider.name' Panel.qml
 grep -Fq 'Flow {' Panel.qml
