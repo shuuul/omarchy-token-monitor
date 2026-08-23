@@ -91,7 +91,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `browser` | `chrome` | `chrome` or `chromium` cookies |
-| `refreshIntervalSec` | `300` | Poll interval |
+| `refreshIntervalSec` | `300` | Poll interval (5 minutes). Change it from the panel gear. |
 | `providers.<id>.enabled` | `true` | Hide one of the seven |
 
 Nested enablement needs the whole object:

@@ -42,6 +42,36 @@ function refreshIntervalSec(settings) {
   return Math.max(MIN_REFRESH_SEC, Math.min(MAX_REFRESH_SEC, value))
 }
 
+function browserName(settings) {
+  var value = String(settings && settings.browser ? settings.browser : "chrome").trim().toLowerCase()
+  return value === "chromium" ? "chromium" : "chrome"
+}
+
+function mergeSettings(current, values) {
+  var entry = {}
+  if (current && typeof current === "object") {
+    for (var key in current) {
+      if (key !== "id") entry[key] = current[key]
+    }
+  }
+  if (values && typeof values === "object") {
+    for (var next in values) entry[next] = values[next]
+  }
+  return entry
+}
+
+function withProviderEnabled(current, providerId, enabled) {
+  var providers = {}
+  var existing = current && current.providers && typeof current.providers === "object" ? current.providers : {}
+  for (var key in existing) providers[key] = existing[key]
+  var prior = providers[providerId] && typeof providers[providerId] === "object" ? providers[providerId] : {}
+  var next = {}
+  for (var field in prior) next[field] = prior[field]
+  next.enabled = !!enabled
+  providers[providerId] = next
+  return mergeSettings(current, { providers: providers })
+}
+
 function collectScript() {
   if (typeof Qt !== "undefined" && Qt.resolvedUrl)
     return Qt.resolvedUrl("collect.py").toString().replace(/^file:\/\//, "")

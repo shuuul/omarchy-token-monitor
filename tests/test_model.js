@@ -25,8 +25,13 @@ assert.deepStrictEqual(
   ),
   [{ provider: "codex", usage: { loginMethod: "new" } }, { provider: "grok", usage: { loginMethod: "keep" } }],
 )
+assert.strictEqual(model.refreshIntervalSec({}), 300)
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 12 }), 30)
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 9000 }), 3600)
+assert.strictEqual(model.browserName({}), "chrome")
+assert.strictEqual(model.browserName({ browser: "chromium" }), "chromium")
+assert.strictEqual(model.mergeSettings({ browser: "chrome" }, { refreshIntervalSec: 300 }).refreshIntervalSec, 300)
+assert.strictEqual(model.withProviderEnabled({ providers: { grok: { enabled: true } } }, "grok", false).providers.grok.enabled, false)
 
 const snapshot = [
   {

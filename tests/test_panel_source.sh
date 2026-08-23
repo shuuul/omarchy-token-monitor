@@ -46,6 +46,9 @@ grep -Fq 'Style.bar.iconCanvas' Panel.qml
 grep -Fq 'anchors.verticalCenter: parent.verticalCenter' Panel.qml
 grep -Fq 'formatUpdatedAt' Panel.qml
 grep -Fq 'Refresh " + root.provider.name' Panel.qml
+grep -Fq 'tooltipText: "Settings"' Panel.qml
+grep -Fq 'Refresh interval' Panel.qml
+grep -Fq 'Browser cookies' Panel.qml
 grep -Fq 'Flow {' Panel.qml
 ! grep -Fq 'leftAlign: true' Panel.qml
 ! grep -Fq 'width: providerSwitch.width' Panel.qml

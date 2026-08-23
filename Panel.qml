@@ -31,6 +31,7 @@ Panel {
   readonly property bool alarming: usage.alarming
 
   property bool cursorActive: false
+  property bool settingsOpen: false
   property double nowMs: Date.now()
 
   function clamp(v, lo, hi) { return Model.clamp(v, lo, hi) }
@@ -44,6 +45,26 @@ Panel {
 
   function refreshNow(onlyId) {
     usage.refresh(onlyId || selectedProviderId)
+  }
+
+  function persistSettings(values) {
+    var entry = Model.mergeSettings(root.settings, values)
+    entry.id = root.moduleName
+    root.settings = entry
+    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function")
+      root.bar.shell.updateEntryInline(root.moduleName, entry)
+  }
+
+  function setBrowser(name) {
+    persistSettings({ browser: Model.browserName({ browser: name }) })
+  }
+
+  function setRefreshMinutes(minutes) {
+    persistSettings({ refreshIntervalSec: Model.refreshIntervalSec({ refreshIntervalSec: minutes * 60 }) })
+  }
+
+  function setProviderEnabled(id, enabled) {
+    persistSettings({ providers: Model.withProviderEnabled(root.settings, id, enabled).providers })
   }
 
   function resetMsFor(window) {
@@ -222,18 +243,122 @@ Panel {
           width: panelFlick.width
           spacing: Style.space(12)
 
-          PanelHero {
-            id: hero
-            visible: !!root.provider
+          Item {
+            visible: !!root.provider && !root.settingsOpen
             width: parent.width
-            title: root.provider ? root.provider.name : ""
-            meta: root.heroMeta(root.provider)
-            foreground: root.foreground
-            fontFamily: root.fontFamily
+            implicitHeight: Math.max(hero.implicitHeight, settingsButton.implicitHeight)
+
+            PanelHero {
+              id: hero
+              anchors.left: parent.left
+              anchors.right: settingsButton.left
+              anchors.rightMargin: Style.space(8)
+              anchors.verticalCenter: parent.verticalCenter
+              title: root.provider ? root.provider.name : ""
+              meta: root.heroMeta(root.provider)
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+            }
+
+            PanelActionButton {
+              id: settingsButton
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              iconText: "󰒓"
+              tooltipText: "Settings"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.settingsOpen = true
+            }
+          }
+
+          Item {
+            visible: root.settingsOpen
+            width: parent.width
+            implicitHeight: settingsHeader.implicitHeight
+
+            Text {
+              id: settingsHeader
+              text: "Settings"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.title
+              font.bold: true
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+            }
+
+            PanelActionButton {
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              iconText: "󰅖"
+              tooltipText: "Close settings"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.settingsOpen = false
+            }
+          }
+
+          Column {
+            visible: root.settingsOpen
+            width: parent.width
+            spacing: Style.space(12)
+
+            Dropdown {
+              width: parent.width
+              label: "Refresh interval"
+              value: String(Math.round(usage.refreshIntervalSec / 60))
+              options: [
+                { value: "1", label: "1 minute" },
+                { value: "5", label: "5 minutes" },
+                { value: "10", label: "10 minutes" },
+                { value: "15", label: "15 minutes" },
+                { value: "30", label: "30 minutes" },
+                { value: "60", label: "60 minutes" }
+              ]
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onChanged: function(value) { root.setRefreshMinutes(parseInt(value, 10)) }
+            }
+
+            Dropdown {
+              width: parent.width
+              label: "Browser cookies"
+              value: Model.browserName(root.settings)
+              options: [
+                { value: "chrome", label: "Chrome" },
+                { value: "chromium", label: "Chromium" }
+              ]
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onChanged: function(value) { root.setBrowser(value) }
+            }
+
+            Text {
+              text: "Providers"
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+            }
+
+            Repeater {
+              model: root.providers
+
+              Toggle {
+                required property var modelData
+                width: parent.width
+                label: modelData.name
+                checked: modelData.enabled
+                foreground: root.foreground
+                fontFamily: root.fontFamily
+                onClicked: root.setProviderEnabled(modelData.id, !modelData.enabled)
+              }
+            }
           }
 
           Text {
-            visible: root.providers.length === 0
+            visible: !root.settingsOpen && root.providers.length === 0
             width: parent.width
             topPadding: Style.space(24)
             text: usage.lastError !== ""
@@ -248,7 +373,7 @@ Panel {
 
           Flow {
             id: providerSwitch
-            visible: root.providers.length > 1
+            visible: !root.settingsOpen && root.providers.length > 1
             width: parent.width
             spacing: Style.space(6)
 
@@ -277,7 +402,7 @@ Panel {
           }
 
           BorderSurface {
-            visible: !!root.provider && root.provider.error !== ""
+            visible: !root.settingsOpen && !!root.provider && root.provider.error !== ""
             width: parent.width
             implicitHeight: statusText.implicitHeight + Style.spacing.xl * 2
             color: root.alpha(root.urgent, 0.10)
@@ -300,7 +425,7 @@ Panel {
           }
 
           Column {
-            visible: !!root.provider && root.provider.accountEmail !== ""
+            visible: !root.settingsOpen && !!root.provider && root.provider.accountEmail !== ""
             width: parent.width
 
             Text {
@@ -320,7 +445,7 @@ Panel {
 
           Column {
             id: creditsSection
-            visible: !!root.provider && root.provider.creditsRemaining !== null
+            visible: !root.settingsOpen && !!root.provider && root.provider.creditsRemaining !== null
             width: parent.width
             spacing: Style.space(10)
 
@@ -368,7 +493,7 @@ Panel {
 
           Column {
             id: limitsSection
-            visible: root.limits.length > 0
+            visible: !root.settingsOpen && root.limits.length > 0
             width: parent.width
             spacing: Style.space(10)
 
@@ -390,7 +515,7 @@ Panel {
           }
 
           Text {
-            visible: !!root.provider && root.provider.paceSummary !== ""
+            visible: !root.settingsOpen && !!root.provider && root.provider.paceSummary !== ""
             width: parent.width
             text: root.provider ? root.provider.paceSummary : ""
             color: root.dim
@@ -400,7 +525,7 @@ Panel {
           }
 
           Text {
-            visible: !!root.provider && (root.provider.updatedAt !== "" || root.provider.source !== "")
+            visible: !root.settingsOpen && !!root.provider && (root.provider.updatedAt !== "" || root.provider.source !== "")
             width: parent.width
             text: {
               if (!root.provider) return ""
@@ -416,6 +541,7 @@ Panel {
 
           Button {
             width: parent.width
+            visible: !root.settingsOpen
             text: usage.busy ? "Refreshing…" : (root.provider ? "Refresh " + root.provider.name : "Refresh")
             enabled: !usage.busy && !!root.provider
             bordered: true
