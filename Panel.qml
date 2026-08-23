@@ -514,23 +514,118 @@ Panel {
             Repeater {
               model: root.providers
 
-              Button {
+              // Delegate root must be a module type (BorderSurface): local
+              // file types do not receive Repeater's modelData/index in
+              // compiled QML. qs.Ui.Button only paints font glyphs
+              // (`iconText`), so mirror its state tokens here, with the
+              // official provider SVG before the name (same MultiEffect
+              // tint pattern as the bar slot icon).
+              BorderSurface {
+                id: switchButton
                 required property var modelData
                 required property int index
 
-                text: modelData.name
-                selected: index === root.providerIndex
-                hasCursor: root.cursorActive && index === root.providerIndex
-                bordered: true
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                fontSize: Style.font.body
-                verticalPadding: Style.spacing.controlPaddingY
+                property bool selected: index === root.providerIndex
+                property bool hasCursor: root.cursorActive && index === root.providerIndex
+                property bool bordered: true
+                property color foreground: root.foreground
+                property color accent: Color.accent
+                property string fontFamily: root.fontFamily
+                property real fontSize: Style.font.body
+                property real iconSize: Math.max(14, Math.round(Style.space(16)))
+
+                signal clicked()
+                signal hovered(bool isHovered)
+
+                readonly property bool hot: mouseArea.containsMouse || hasCursor
+                readonly property color selectedColor: Style.selectedStateColor(foreground, accent)
+                readonly property var hoverBorderSpec: Border.controlSpec("hover-cursor", foreground, accent)
+                readonly property var selectedBorderSpec: Border.controlSpec("selected", foreground, accent)
+                readonly property var normalBorderSpec: Border.controlSpec("normal", foreground, accent)
+                readonly property real reservedTop: Math.max(Border.top(hoverBorderSpec), Border.top(selectedBorderSpec), bordered ? Border.top(normalBorderSpec) : 0)
+                readonly property real reservedRight: Math.max(Border.right(hoverBorderSpec), Border.right(selectedBorderSpec), bordered ? Border.right(normalBorderSpec) : 0)
+                readonly property real reservedBottom: Math.max(Border.bottom(hoverBorderSpec), Border.bottom(selectedBorderSpec), bordered ? Border.bottom(normalBorderSpec) : 0)
+                readonly property real reservedLeft: Math.max(Border.left(hoverBorderSpec), Border.left(selectedBorderSpec), bordered ? Border.left(normalBorderSpec) : 0)
+
+                leftPadding: Style.spacing.controlPaddingX
+                rightPadding: Style.spacing.controlPaddingX
+                topPadding: Style.spacing.controlPaddingY
+                bottomPadding: Style.spacing.controlPaddingY
+
+                implicitWidth: row.implicitWidth + leftPadding + rightPadding + reservedLeft + reservedRight
+                implicitHeight: row.implicitHeight + topPadding + bottomPadding + reservedTop + reservedBottom
+                radius: Style.cornerRadius
+
+                color: mouseArea.pressed ? Style.pressedFillFor(foreground, accent)
+                  : hot ? Style.hoverFillFor(foreground, accent)
+                  : selected ? Style.selectedFillFor(foreground, accent)
+                  : "transparent"
+
+                borderSpec: hot ? hoverBorderSpec
+                  : selected && Border.controlHasWidth("selected") ? selectedBorderSpec
+                  : bordered ? normalBorderSpec
+                  : Border.none()
+
+                Behavior on color { ColorAnimation { duration: 120 } }
+
                 onClicked: {
                   root.cursorActive = true
                   root.selectProvider(index)
                 }
                 onHovered: function(isHovered) { if (isHovered) root.cursorActive = true }
+
+                Row {
+                  id: row
+                  anchors.verticalCenter: parent.verticalCenter
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  spacing: Style.spacing.controlGap
+
+                  Item {
+                    width: switchButton.iconSize
+                    height: switchButton.iconSize
+
+                    Image {
+                      id: providerIcon
+                      anchors.fill: parent
+                      source: Qt.resolvedUrl("assets/" + modelData.id + ".svg")
+                      sourceSize.width: width * 2
+                      sourceSize.height: height * 2
+                      fillMode: Image.PreserveAspectFit
+                      asynchronous: false
+                      visible: false
+                      layer.enabled: true
+                    }
+
+                    MultiEffect {
+                      anchors.fill: providerIcon
+                      source: providerIcon
+                      colorization: 1.0
+                      colorizationColor: switchButton.selected ? switchButton.selectedColor : switchButton.foreground
+                    }
+                  }
+
+                  Text {
+                    text: modelData.name
+                    color: switchButton.selected ? switchButton.selectedColor : switchButton.foreground
+                    font.family: switchButton.fontFamily
+                    font.pixelSize: switchButton.fontSize
+                    font.bold: switchButton.selected
+                    anchors.verticalCenter: parent.verticalCenter
+                  }
+                }
+
+                MouseArea {
+                  id: mouseArea
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  acceptedButtons: Qt.LeftButton
+                  onClicked: switchButton.clicked()
+                }
+
+                HoverHandler {
+                  onHoveredChanged: switchButton.hovered(hovered)
+                }
               }
             }
           }

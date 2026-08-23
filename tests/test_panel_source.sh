@@ -43,6 +43,7 @@ grep -Fq 'M67.8515 23.9286C67.6213 23.8754' assets/factory.svg
 
 # Panel wiring follows the Omarchy agents / clock contract.
 grep -Fq 'text: modelData.name' Panel.qml
+grep -Fq 'assets/" + modelData.id + ".svg' Panel.qml
 grep -Fq 'Model.iconWindows' Panel.qml
 grep -Fq 'id: usageBars' Panel.qml
 grep -Fq 'colorizationColor' Panel.qml
