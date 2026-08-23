@@ -513,7 +513,27 @@ def parse_grok_grpc(payload: bytes) -> dict:
     return used, reset_at
 
 
-def grok_plan_name(header: str) -> str:
+def grok_pretty_plan(raw: str) -> str:
+    compact = "".join(ch for ch in raw.lower() if ch.isalnum() or ch == "+")
+    letters = "".join(ch for ch in compact if ch.isalpha())
+    if letters in ("supergrokheavy", "heavy") or compact in ("supergrokheavy", "heavy"):
+        return "SuperGrok Heavy"
+    if letters == "supergrokplus" or compact in ("supergrok+", "supergrokplus"):
+        return "SuperGrok Plus"
+    if letters in ("supergroklite", "lite"):
+        return "SuperGrok Lite"
+    if letters == "supergrok":
+        return "SuperGrok"
+    if compact in ("premium+", "xpremium+", "premiumplus", "xpremiumplus") or letters in ("premiumplus", "xpremiumplus"):
+        return "X Premium+"
+    if letters in ("premium", "xpremium"):
+        return "X Premium"
+    if letters in ("free", "none"):
+        return ""
+    return raw.strip()
+
+
+def grok_settings_plan(header: str) -> str:
     status, body, _ = http(
         "https://cli-chat-proxy.grok.com/v1/settings",
         headers={"Cookie": header, "Accept": "application/json"},
@@ -525,7 +545,36 @@ def grok_plan_name(header: str) -> str:
         data = json.loads(body)
     except json.JSONDecodeError:
         return ""
-    return str(data.get("subscription_tier_display") or "").strip()
+    return grok_pretty_plan(str(data.get("subscription_tier_display") or ""))
+
+
+def grok_session_plan(header: str) -> tuple[str, str | None]:
+    status, body, _ = http(
+        "https://accounts.x.ai/api/auth/session",
+        headers={
+            "Cookie": header,
+            "Accept": "application/json",
+            "Origin": "https://accounts.x.ai",
+            "Referer": "https://accounts.x.ai/",
+        },
+        timeout=8,
+    )
+    if status != 200:
+        return "", None
+    try:
+        data = json.loads(body)
+    except json.JSONDecodeError:
+        return "", None
+    session = data.get("session") or {}
+    email = session.get("email")
+    plan = grok_pretty_plan(str(session.get("xSubscriptionType") or ""))
+    return plan, email
+
+
+def grok_plan_name(header: str) -> tuple[str, str | None]:
+    billed, email = grok_session_plan(header)
+    settings = grok_settings_plan(header)
+    return settings or billed, email
 
 
 def fetch_grok(jars: dict) -> dict:
@@ -551,17 +600,21 @@ def fetch_grok(jars: dict) -> dict:
         used, reset_at = parse_grok_grpc(body)
     except Exception:
         return row("grok", source="chrome", error="Could not parse Grok billing payload.")
-    plan = grok_plan_name(header) or "Free"
-    return row(
-        "grok",
-        source="chrome",
-        usage={
+    plan, email = grok_plan_name(header)
+    usage = {
+        "loginMethod": plan,
+        "identity": {
+            "providerID": "grok",
+            "accountEmail": email,
+            "plan": plan,
             "loginMethod": plan,
-            "identity": {"providerID": "grok", "plan": plan, "loginMethod": plan},
-            "primary": window(used, None, reset_at, "Credits"),
-            "updatedAt": iso_now(),
         },
-    )
+        "primary": window(used, None, reset_at, "Credits"),
+        "updatedAt": iso_now(),
+    }
+    if email:
+        usage["accountEmail"] = email
+    return row("grok", source="chrome", usage=usage)
 
 
 KIMI_CLIENT_ID = "17e5f671-d194-4dfb-9706-5516cb48c098"

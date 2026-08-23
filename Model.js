@@ -457,8 +457,17 @@ function prettyPlanPart(providerId, raw) {
     },
     grok: {
       free: "Free",
+      premium: "X Premium",
+      x_premium: "X Premium",
+      premiumplus: "X Premium+",
+      premium_plus: "X Premium+",
+      x_premium_plus: "X Premium+",
+      lite: "SuperGrok Lite",
+      supergrok_lite: "SuperGrok Lite",
       supergrok: "SuperGrok",
       super_grok: "SuperGrok",
+      plus: "SuperGrok Plus",
+      supergrok_plus: "SuperGrok Plus",
       heavy: "SuperGrok Heavy",
       supergrok_heavy: "SuperGrok Heavy",
       super_grok_heavy: "SuperGrok Heavy"

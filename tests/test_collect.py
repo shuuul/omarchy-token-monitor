@@ -62,6 +62,10 @@ assert name == "shuuul"
 used, reset_at = collect.parse_grok_grpc(bytes.fromhex("0000000000"))
 assert used == 0.0
 assert reset_at is None
+assert collect.grok_pretty_plan("Premium") == "X Premium"
+assert collect.grok_pretty_plan("Premium+") == "X Premium+"
+assert collect.grok_pretty_plan("SuperGrok Heavy") == "SuperGrok Heavy"
+assert collect.grok_pretty_plan("") == ""
 assert collect.kimi_plan_name(
     "token",
     {"me": None},
@@ -75,5 +79,6 @@ assert "api.kimi.ai/coding/v1/usages" in source
 assert "api.kimi.com/coding/v1/me" in source
 assert "api.kimi.ai/coding/v1/me" in source
 assert "cli-chat-proxy.grok.com/v1/settings" in source
+assert "accounts.x.ai/api/auth/session" in source
 assert "zed-github-account" in source
 print("collect tests passed")
