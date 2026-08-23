@@ -1,9 +1,8 @@
 .pragma library
 
-// Pure CodexBar usage JSON parsing and formatting. QML owns theme and
-// process I/O; this file is what the node tests exercise.
+// Usage JSON parsing and formatting. QML owns theme and process I/O;
+// this file is what the node tests exercise.
 
-var DEFAULT_CODEXBAR_PATH = "codexbar"
 var DEFAULT_REFRESH_SEC = 300
 var MIN_REFRESH_SEC = 30
 var MAX_REFRESH_SEC = 3600
@@ -41,12 +40,6 @@ function refreshIntervalSec(settings) {
   var value = parseInt(String(raw === undefined || raw === null ? DEFAULT_REFRESH_SEC : raw), 10)
   if (!isFinite(value)) value = DEFAULT_REFRESH_SEC
   return Math.max(MIN_REFRESH_SEC, Math.min(MAX_REFRESH_SEC, value))
-}
-
-function commandPath(settings) {
-  var raw = settings ? settings.codexbarPath : undefined
-  var value = String(raw === undefined || raw === null ? "" : raw).trim()
-  return value === "" ? DEFAULT_CODEXBAR_PATH : value
 }
 
 function collectScript() {
@@ -129,10 +122,10 @@ function parseError(text, exitCode) {
     var lines = trimmed.split("\n")
     return lines[lines.length - 1]
   }
-  if (exitCode === 2) return "codexbar is not on PATH"
-  if (exitCode === 139) return "codexbar crashed"
-  if (exitCode) return "codexbar exited " + exitCode
-  return "codexbar returned no snapshot"
+  if (exitCode === 2) return "python3 could not run collect.py"
+  if (exitCode === 139) return "collect.py crashed"
+  if (exitCode) return "collect.py exited " + exitCode
+  return "collect.py returned no snapshot"
 }
 
 function asNumber(value) {
@@ -393,7 +386,7 @@ function barIconId(providers, loading, selectedId) {
 }
 
 function barTooltip(providers, missingCli) {
-  if (missingCli) return "Install the CodexBar Linux CLI, then enable Amp, Codex, Kimi, Cursor, Grok, Notion, or Zed."
+  if (missingCli) return "python3 could not run collect.py. Install Python 3, then refresh."
   var rows = Array.isArray(providers) ? providers : []
   if (rows.length === 0) return "Token Monitor"
   var lines = []

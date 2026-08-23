@@ -1,62 +1,88 @@
-# Token Monitor
+# Token Monitor for Omarchy
 
-Omarchy bar plugin for [CodexBar](https://github.com/steipete/CodexBar) quotas.
+An Omarchy bar panel for AI coding quotas: Amp, Codex, Kimi Code, Cursor, Grok,
+Notion AI, and Zed.
 
-Supported providers, IDs matching CodexBar exactly:
+Use it to see remaining weekly and session usage next to the selected provider
+icon, open a panel for the seven supported accounts, and refresh one provider
+at a time.
 
-| Display | CodexBar ID |
-| --- | --- |
-| Amp | `amp` |
-| Codex | `codex` |
-| Kimi Code | `kimi` |
-| Cursor | `cursor` |
-| Grok | `grok` |
-| Notion AI | `notion` |
-| Zed | `zed` |
+Provider IDs match [CodexBar](https://github.com/steipete/CodexBar) exactly.
+The panel does not run the CodexBar CLI. It reads the same local sessions this
+machine already has: Chrome cookies, CLI auth files, and the Linux keyring.
 
-This plugin talks to the vendor APIs itself. Chrome/Chromium cookies cover Cursor, Notion, Grok, and Amp. Codex uses `~/.codex/auth.json`. Amp prefers `amp usage`. Kimi uses the Kimi Code CLI token. Zed has no Linux cookie path yet.
+## Requirements
 
-## Why wrap CodexBar
+- Omarchy
+- Python 3
+- Google Chrome or Chromium, for Cursor, Notion, Grok, and Amp cookies
 
-There is no existing Omarchy plugin that covers this set.
+## Getting Started
 
-Closest references:
+Sign in locally for the providers you use:
 
-- First-party `omarchy.agents` — Claude, Codex, Fireworks only; local collectors, not CodexBar.
-- [robzolkos/omarchy-agent-usage](https://github.com/robzolkos/omarchy-agent-usage) — Claude + Codex only.
-- [noctalia-codex-usage](https://github.com/rayoplateado/noctalia-codex-usage) and [CodexBar Meter](https://github.com/noctalia-dev/community-plugins/tree/main/codexbar-meter) — Quickshell, but Noctalia, not Omarchy.
-- [codexbar-waybar](https://github.com/Marouan-chak/codexbar-waybar) — official Linux integration pattern: UI wraps the CodexBar CLI.
+```bash
+codex login
+amp
+kimi login
+```
 
-Reimplementing Amp / Codex / Kimi / Cursor / Grok / Notion / Zed auth would drift from CodexBar. The Linux CLI is the portable core.
+Sign in to cursor.com, app.notion.com, and grok.com in Chrome. Zed uses the
+desktop client's Linux keyring item after `client: sign in`.
 
-## Install
-
-1. Sign in to Chrome (or Chromium) for Cursor, Notion, Grok, and Amp.
-2. Sign in locally for Codex (`codex login`) and Amp (`amp`).
-3. Add the plugin:
+Install the Omarchy plugin:
 
 ```bash
 omarchy plugin add <this-git-url> --enable
 ```
 
-During local development:
+During local development, from this checkout:
 
 ```bash
-ln -sfn "$PWD" ~/.config/omarchy/plugins/shuuul.token-monitor
-omarchy-shell shell rescanPlugins
+./install.sh
 ```
 
-`omarchy plugin add` refuses symlinks inside a plugin folder. Use a real git checkout for install, a symlink only for development.
+Remove the Omarchy plugin:
 
-## Use
+```bash
+omarchy plugin remove shuuul.token-monitor
+```
 
-- Left click: open the panel
-- Right click: refresh
-- Middle click / `h` `l`: next provider
-- `r` or Enter: refresh
-- Esc: close
+The bar shows the selected provider icon and two remaining meters: weekly on
+top, session underneath. Left click opens the panel. Right click refreshes the
+selected provider. Middle click moves to the next one.
 
-Bar text is `Cu 91%` — monogram plus the fullest window across enabled providers.
+## Why collect.py exists
+
+Quickshell QML cannot decrypt Chrome cookies, talk to Secret Service, or keep
+OAuth refresh writes atomic. Those steps live in `collect.py`. The panel only
+renders JSON that script prints.
+
+`collect.py` is required because:
+
+- Chrome/Chromium cookies are an SQLite database encrypted with a key from
+  `secret-tool`. QML has no AES or libsecret bindings.
+- Zed stores `{user_id, token}` in the default keyring. The collector looks
+  that item up and never prints the secret.
+- Kimi tokens expire in minutes. The collector refreshes them and writes the
+  file back `0600`.
+- Amp usage is a local CLI (`amp usage`). Codex is `~/.codex/auth.json`.
+- The process must inherit the Omarchy shell environment. An empty `HOME`
+  makes Amp look like `No such file` and every cookie provider look signed out.
+
+Stdout is one JSON array. Cookies and tokens never appear there.
+
+## Sign-in map
+
+| Provider | CodexBar ID | How this panel reads it |
+| --- | --- | --- |
+| Amp | `amp` | `amp usage`, then Chrome cookies |
+| Codex | `codex` | `~/.codex/auth.json` |
+| Kimi Code | `kimi` | `~/.kimi-code/credentials/` on kimi.com and kimi.ai |
+| Cursor | `cursor` | Chrome cookie `WorkosCursorSessionToken` |
+| Grok | `grok` | Chrome cookies `sso` / `sso-rw` |
+| Notion AI | `notion` | Chrome cookie `token_v2` |
+| Zed | `zed` | Linux keyring item `zed-github-account` |
 
 ## Settings
 
@@ -66,7 +92,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | --- | --- | --- |
 | `browser` | `chrome` | `chrome` or `chromium` cookies |
 | `refreshIntervalSec` | `300` | Poll interval |
-| `providers.<id>.enabled` | `true` | Hide one of the seven without changing CodexBar |
+| `providers.<id>.enabled` | `true` | Hide one of the seven |
 
 Nested enablement needs the whole object:
 
@@ -82,26 +108,25 @@ omarchy bar set shuuul.token-monitor providers '{
 }' --json
 ```
 
-## Linux auth notes
-
-CodexBar's macOS browser-cookie import is not available here. Prefer CLI / OAuth / API / manual cookie paths:
-
-- Amp: `amp usage` or an Amp access token
-- Codex: `~/.codex/auth.json` or Codex CLI RPC
-- Kimi: `KIMI_CODE_API_KEY` or `~/.kimi-code/credentials/kimi-code.json`
-- Cursor: manual cookie header in CodexBar config
-- Grok: `~/.grok/auth.json` or `grok` CLI
-- Notion: manual `token_v2` / Cookie header
-- Zed: Linux credential store, same `{user_id} {access_token}` request as CodexBar
-
-## Develop
+## Development
 
 ```bash
+./install.sh --no-restart
 make test
-make qml-check    # needs Omarchy + qmllint
 make validate
 ```
 
+After a QML or `collect.py` change, restart the shell before checking the bar:
+
+```bash
+omarchy restart shell
+omarchy-shell shuuul.token-monitor refresh
+```
+
+`rescanPlugins` only rediscovers plugin folders. It does not rebuild the
+Quickshell QML cache.
+
 ## License
 
-MIT
+MIT. CodexBar, Amp, Codex, Kimi, Cursor, Grok, Notion, and Zed are separate
+products under their own licenses.

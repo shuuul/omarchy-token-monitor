@@ -4,8 +4,7 @@ import Quickshell.Io
 import "Model.js" as Model
 import "Providers.js" as Providers
 
-// CodexBar owns auth, fetch, and provider mapping. This object only runs
-// `codexbar dashboard` and keeps the last good snapshot for the panel.
+// Runs collect.py and keeps the last good snapshot for the panel.
 Item {
   id: root
   visible: false

@@ -67,7 +67,7 @@ const snapshot = [
 
 assert.ok(model.parseSnapshot(JSON.stringify(snapshot)))
 assert.strictEqual(model.parseSnapshot("not-json"), null)
-assert.strictEqual(model.parseError("", 2), "codexbar is not on PATH")
+assert.strictEqual(model.parseError("", 2), "python3 could not run collect.py")
 
 const parsed = model.parseSnapshot(JSON.stringify(snapshot))
 const rows = model.providersFromSnapshot(
