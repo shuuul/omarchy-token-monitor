@@ -266,7 +266,19 @@ function providersFromSnapshot(snapshot, enabledIds, catalog) {
   return out
 }
 
-function barHeadline(providers) {
+function providerById(providers, providerId) {
+  var rows = Array.isArray(providers) ? providers : []
+  var wanted = String(providerId || "")
+  if (wanted === "") return null
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i] && rows[i].id === wanted) return rows[i]
+  }
+  return null
+}
+
+function barHeadline(providers, selectedId) {
+  var selected = providerById(providers, selectedId)
+  if (selected) return selected
   var rows = Array.isArray(providers) ? providers : []
   var best = null
   for (var i = 0; i < rows.length; i++) {
@@ -277,20 +289,25 @@ function barHeadline(providers) {
   return best
 }
 
-function barText(providers, loading) {
+function barCaption(provider) {
+  if (!provider) return ""
+  if (provider.binding) return provider.name + " " + Math.round(provider.binding.usedPercent) + "%"
+  if (provider.error) return provider.name
+  return provider.name || ""
+}
+
+function barText(providers, loading, selectedId) {
   if (loading && (!providers || providers.length === 0)) return "…"
-  var headline = barHeadline(providers)
-  if (headline) return headline.name + " " + Math.round(headline.binding.usedPercent) + "%"
+  var headline = barHeadline(providers, selectedId)
+  var caption = barCaption(headline)
+  if (caption) return caption
   if (!providers || providers.length === 0) return "—"
-  for (var i = 0; i < providers.length; i++) {
-    if (providers[i] && providers[i].error) return providers[i].name
-  }
   return "Token Monitor"
 }
 
-function barIconId(providers, loading) {
-  var headline = barHeadline(providers)
-  if (headline) return headline.id
+function barIconId(providers, loading, selectedId) {
+  var headline = barHeadline(providers, selectedId)
+  if (headline && headline.id) return headline.id
   var rows = Array.isArray(providers) ? providers : []
   for (var i = 0; i < rows.length; i++) {
     if (rows[i] && rows[i].id) return rows[i].id
@@ -400,6 +417,14 @@ function prettyPlanPart(providerId, raw) {
       allegretto: "Allegretto",
       allegro: "Allegro",
       vivace: "Vivace"
+    },
+    grok: {
+      free: "Free",
+      supergrok: "SuperGrok",
+      super_grok: "SuperGrok",
+      heavy: "SuperGrok Heavy",
+      supergrok_heavy: "SuperGrok Heavy",
+      super_grok_heavy: "SuperGrok Heavy"
     },
     notion: {
       free: "Free",

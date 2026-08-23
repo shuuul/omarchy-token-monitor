@@ -59,6 +59,9 @@ assert space_id == "space-1"
 assert email == "user@example.com"
 assert tier == "business"
 assert name == "shuuul"
+used, reset_at = collect.parse_grok_grpc(bytes.fromhex("0000000000"))
+assert used == 0.0
+assert reset_at is None
 assert collect.kimi_plan_name(
     "token",
     {"me": None},
@@ -71,5 +74,6 @@ assert "auth.kimi.ai/api/oauth/token" in source
 assert "api.kimi.ai/coding/v1/usages" in source
 assert "api.kimi.com/coding/v1/me" in source
 assert "api.kimi.ai/coding/v1/me" in source
+assert "cli-chat-proxy.grok.com/v1/settings" in source
 assert "zed-github-account" in source
 print("collect tests passed")

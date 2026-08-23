@@ -31,8 +31,14 @@ Item {
     return false
   }
   readonly property bool busy: dashboardProcess.running
-  readonly property string barLabel: Model.barText(providers, busy && !hasSnapshot)
-  readonly property string barIconId: Model.barIconId(providers, busy && !hasSnapshot)
+  function barLabelFor(selectedId) {
+    return Model.barText(providers, busy && !hasSnapshot, selectedId)
+  }
+  function barIconIdFor(selectedId) {
+    return Model.barIconId(providers, busy && !hasSnapshot, selectedId)
+  }
+  readonly property string barLabel: barLabelFor("")
+  readonly property string barIconId: barIconIdFor("")
   readonly property string barTooltip: Model.barTooltip(providers, missingCli)
 
   readonly property string pluginDir: {

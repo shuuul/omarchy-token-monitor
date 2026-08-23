@@ -510,16 +510,22 @@ def parse_grok_grpc(payload: bytes) -> dict:
     now = datetime.now(timezone.utc).timestamp()
     future = [ts for ts in resets if ts > now]
     reset_at = iso_from_unix(min(future) if future else (min(resets) if resets else None))
-    return row(
-        "grok",
-        source="chrome",
-        usage={
-            "loginMethod": "Grok",
-            "identity": {"providerID": "grok", "loginMethod": "Grok"},
-            "primary": window(used, None, reset_at, "Credits"),
-            "updatedAt": iso_now(),
-        },
+    return used, reset_at
+
+
+def grok_plan_name(header: str) -> str:
+    status, body, _ = http(
+        "https://cli-chat-proxy.grok.com/v1/settings",
+        headers={"Cookie": header, "Accept": "application/json"},
+        timeout=8,
     )
+    if status != 200:
+        return ""
+    try:
+        data = json.loads(body)
+    except json.JSONDecodeError:
+        return ""
+    return str(data.get("subscription_tier_display") or "").strip()
 
 
 def fetch_grok(jars: dict) -> dict:
@@ -542,9 +548,20 @@ def fetch_grok(jars: dict) -> dict:
     if status != 200:
         return row("grok", source="chrome", error=f"Grok billing returned {status}.")
     try:
-        return parse_grok_grpc(body)
+        used, reset_at = parse_grok_grpc(body)
     except Exception:
         return row("grok", source="chrome", error="Could not parse Grok billing payload.")
+    plan = grok_plan_name(header) or "Free"
+    return row(
+        "grok",
+        source="chrome",
+        usage={
+            "loginMethod": plan,
+            "identity": {"providerID": "grok", "plan": plan, "loginMethod": plan},
+            "primary": window(used, None, reset_at, "Credits"),
+            "updatedAt": iso_now(),
+        },
+    )
 
 
 KIMI_CLIENT_ID = "17e5f671-d194-4dfb-9706-5516cb48c098"

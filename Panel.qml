@@ -103,7 +103,7 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: usage.barLabel
+    text: usage.barLabelFor(selectedProviderId)
     labelVisible: false
     tooltipText: usage.barTooltip
     active: root.alarming
@@ -124,14 +124,14 @@ Panel {
         id: barIcon
         width: Style.font.body
         height: Style.font.body
-        source: Qt.resolvedUrl("assets/" + usage.barIconId + ".svg")
+        source: Qt.resolvedUrl("assets/" + usage.barIconIdFor(selectedProviderId) + ".svg")
         sourceSize.width: Style.font.body * 2
         sourceSize.height: Style.font.body * 2
         fillMode: Image.PreserveAspectFit
       }
 
       Text {
-        text: usage.barLabel
+        text: usage.barLabelFor(selectedProviderId)
         color: button.active ? button.activeColor : button.foreground
         font.family: button.fontFamily
         font.pixelSize: button.fontSize
