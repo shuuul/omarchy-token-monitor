@@ -17,6 +17,7 @@ parsed = collect.parse_amp_text(text)
 assert parsed["provider"] == "amp"
 assert parsed["usage"]["primary"]["usedPercent"] == 1
 assert parsed["usage"]["secondary"]["usedPercent"] == 5
+assert parsed["usage"]["secondary"]["label"] == "Token Usage"
 assert parsed["usage"]["tertiary"]["usedPercent"] == 3
 assert parsed["credits"]["remaining"] == 3.23
 

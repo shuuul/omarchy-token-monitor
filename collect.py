@@ -435,7 +435,7 @@ def parse_amp_text(text: str) -> dict:
     )
     if sub:
         usage["loginMethod"] = sub.group(1).strip()
-        usage["secondary"] = window(100 - float(sub.group(2)), None, None, "Other usage")
+        usage["secondary"] = window(100 - float(sub.group(2)), None, None, "Token Usage")
         usage["tertiary"] = window(100 - float(sub.group(3)), None, None, "Orb usage")
         usage.setdefault("identity", {})["loginMethod"] = sub.group(1).strip()
     credits = re.search(r"Individual credits:\s*\$?([0-9.]+)\s+remaining", text)
