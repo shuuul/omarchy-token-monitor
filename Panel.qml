@@ -363,7 +363,7 @@ Panel {
             topPadding: Style.space(24)
             text: usage.lastError !== ""
               ? usage.lastError
-              : "Waiting for Amp, Codex, Kimi, Cursor, Grok, Notion, and Zed."
+              : "Waiting for Amp, Codex, Kimi, Cursor, Grok, Notion, Zed, and Droid."
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.body
@@ -445,7 +445,7 @@ Panel {
 
           Column {
             id: creditsSection
-            visible: !root.settingsOpen && !!root.provider && root.provider.creditsRemaining !== null
+            visible: !root.settingsOpen && !!root.provider && root.provider.creditsRemaining !== null && root.provider.creditsLabel !== "Extra usage"
             width: parent.width
             spacing: Style.space(10)
 
@@ -510,6 +510,32 @@ Panel {
                 required property var modelData
                 width: limitsSection.width
                 window: modelData
+              }
+            }
+
+            Item {
+              visible: !!root.provider && root.provider.creditsLabel === "Extra usage" && root.provider.creditsRemaining !== null
+              width: parent.width
+              implicitHeight: Math.max(extraUsageLabel.implicitHeight, extraUsageValue.implicitHeight)
+
+              Text {
+                id: extraUsageLabel
+                text: "Extra usage"
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.body
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+              }
+
+              Text {
+                id: extraUsageValue
+                text: root.creditsText(root.provider)
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
               }
             }
           }

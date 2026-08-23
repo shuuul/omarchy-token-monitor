@@ -1,8 +1,9 @@
 .pragma library
 
-// The seven providers this plugin is allowed to show. IDs must match CodexBar
-// exactly: amp, codex, kimi, cursor, grok, notion, zed. Adding any other ID
-// here is a product change, not a display tweak.
+// The providers this plugin is allowed to show. IDs must match CodexBar
+// exactly: amp, codex, kimi, cursor, grok, notion, zed, factory. Adding any
+// other ID here is a product change, not a display tweak. factory displays
+// as Droid.
 
 var SUPPORTED = [
   { id: "amp", name: "Amp", monogram: "A" },
@@ -11,7 +12,8 @@ var SUPPORTED = [
   { id: "cursor", name: "Cursor", monogram: "Cu" },
   { id: "grok", name: "Grok", monogram: "G" },
   { id: "notion", name: "Notion AI", monogram: "N" },
-  { id: "zed", name: "Zed", monogram: "Z" }
+  { id: "zed", name: "Zed", monogram: "Z" },
+  { id: "factory", name: "Droid", monogram: "D" }
 ]
 
 var DEFAULT_PROVIDERS = {
@@ -21,7 +23,8 @@ var DEFAULT_PROVIDERS = {
   cursor: { enabled: true },
   grok: { enabled: true },
   notion: { enabled: true },
-  zed: { enabled: true }
+  zed: { enabled: true },
+  factory: { enabled: true }
 }
 
 function catalog() {

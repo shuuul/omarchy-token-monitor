@@ -21,10 +21,11 @@ grep -Fq '{ id: "cursor", name: "Cursor"' Providers.js
 grep -Fq '{ id: "grok", name: "Grok"' Providers.js
 grep -Fq '{ id: "notion", name: "Notion AI"' Providers.js
 grep -Fq '{ id: "zed", name: "Zed"' Providers.js
-[[ "$(grep -c '{ id: "' Providers.js)" -eq 7 ]]
+grep -Fq '{ id: "factory", name: "Droid"' Providers.js
+[[ "$(grep -c '{ id: "' Providers.js)" -eq 8 ]]
 
 # Provider marks come from CodexBar ProviderIcon-*.svg, tinted with currentColor.
-for id in amp codex kimi cursor grok notion zed; do
+for id in amp codex kimi cursor grok notion zed factory; do
   grep -Fq 'currentColor' "assets/${id}.svg"
 done
 # Distinct official marks, not the old monogram placeholders.
@@ -36,6 +37,7 @@ grep -Fq 'M9.27 15.29l7.978-5.897' assets/grok.svg
 grep -Fq 'M21.7202 0.939941' assets/kimi.svg
 grep -Fq 'M15.257.055l-13.31.98' assets/notion.svg
 grep -Fq 'M2.25 1.5a.75.75 0 0 0-.75.75v16.5H0V2.25' assets/zed.svg
+grep -Fq 'M67.8515 23.9286C67.6213 23.8754' assets/factory.svg
 
 # Panel wiring follows the Omarchy agents / clock contract.
 grep -Fq 'text: modelData.name' Panel.qml
@@ -46,6 +48,7 @@ grep -Fq 'Style.bar.iconCanvas' Panel.qml
 grep -Fq 'anchors.verticalCenter: parent.verticalCenter' Panel.qml
 grep -Fq 'formatUpdatedAt' Panel.qml
 grep -Fq 'Refresh " + root.provider.name' Panel.qml
+grep -Fq 'text: "Extra usage"' Panel.qml
 grep -Fq 'tooltipText: "Settings"' Panel.qml
 grep -Fq 'Refresh interval' Panel.qml
 grep -Fq 'Browser cookies' Panel.qml

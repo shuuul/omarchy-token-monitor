@@ -1,10 +1,10 @@
 # Token Monitor for Omarchy
 
 An Omarchy bar panel for AI coding quotas: Amp, Codex, Kimi Code, Cursor, Grok,
-Notion AI, and Zed.
+Notion AI, Zed, and Droid.
 
 Use it to see remaining weekly and session usage next to the selected provider
-icon, open a panel for the seven supported accounts, and refresh one provider
+icon, open a panel for the supported accounts, and refresh one provider
 at a time.
 
 Provider IDs match [CodexBar](https://github.com/steipete/CodexBar) exactly.
@@ -28,7 +28,9 @@ kimi login
 ```
 
 Sign in to cursor.com, app.notion.com, and grok.com in Chrome. Zed uses the
-desktop client's Linux keyring item after `client: sign in`.
+desktop client's Linux keyring item after `client: sign in`. Droid uses the
+local `droid` login, `FACTORY_API_KEY` / `~/.factory/.env`, or app.factory.ai
+Chrome cookies.
 
 Install the Omarchy plugin:
 
@@ -83,6 +85,7 @@ Stdout is one JSON array. Cookies and tokens never appear there.
 | Grok | `grok` | Chrome cookies `sso` / `sso-rw` |
 | Notion AI | `notion` | Chrome cookie `token_v2` |
 | Zed | `zed` | Linux keyring item `zed-github-account` |
+| Droid | `factory` | `droid` CLI keyring, `FACTORY_API_KEY`, or Chrome cookies |
 
 ## Settings
 
@@ -92,7 +95,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | --- | --- | --- |
 | `browser` | `chrome` | `chrome` or `chromium` cookies |
 | `refreshIntervalSec` | `300` | Poll interval (5 minutes). Change it from the panel gear. |
-| `providers.<id>.enabled` | `true` | Hide one of the seven |
+| `providers.<id>.enabled` | `true` | Hide one of the supported providers |
 
 Nested enablement needs the whole object:
 
@@ -104,7 +107,8 @@ omarchy bar set shuuul.token-monitor providers '{
   "cursor": { "enabled": true },
   "grok": { "enabled": false },
   "notion": { "enabled": false },
-  "zed": { "enabled": true }
+  "zed": { "enabled": true },
+  "factory": { "enabled": true }
 }' --json
 ```
 
@@ -128,5 +132,5 @@ Quickshell QML cache.
 
 ## License
 
-MIT. CodexBar, Amp, Codex, Kimi, Cursor, Grok, Notion, and Zed are separate
-products under their own licenses.
+MIT. CodexBar, Amp, Codex, Kimi, Cursor, Grok, Notion, Zed, and Factory Droid
+are separate products under their own licenses.

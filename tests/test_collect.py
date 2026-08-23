@@ -30,7 +30,63 @@ assert collect.kimi_token_fresh({"expires_at": 200}, now=100) is True
 assert [region["name"] for region in collect.KIMI_REGIONS] == ["kimi.com", "kimi.ai"]
 assert collect.requested_providers({}, ["grok"]) == ("grok",)
 assert collect.requested_providers({"only": "codex"}, []) == ("codex",)
+assert collect.requested_providers({"only": "factory"}, []) == ("factory",)
 assert collect.requested_providers({}, []) == collect.PROVIDERS
+assert collect.PROVIDERS[-1] == "factory"
+assert collect.factory_api_key_from_dotenv("export FACTORY_API_KEY='abc'") == "abc"
+assert collect.factory_plan_name({
+    "organization": {
+        "subscription": {
+            "factoryTier": "team_annual",
+            "orbSubscription": {"plan": {"name": "Factory Pro Annual Plan"}},
+        }
+    }
+}) == "Factory Team Annual"
+limits = {
+    "usesTokenRateLimitsBilling": True,
+    "limits": {
+        "standard": {
+            "fiveHour": {"usedPercent": 2, "secondsRemaining": 100},
+            "weekly": {"usedPercent": 8, "secondsRemaining": 200},
+            "monthly": {"usedPercent": 27, "windowEnd": "2026-09-12T10:32:37.120Z"},
+        },
+        "core": {
+            "fiveHour": {"usedPercent": 29, "windowEnd": "2026-08-11T19:15:10.804Z"},
+        },
+    },
+    "overagePreference": "droidCore",
+    "extraUsageBalanceCents": 0,
+}
+auth = {
+    "userProfile": {"email": "user@example.com"},
+    "organization": {
+        "name": "Example",
+        "subscription": {
+            "factoryTier": "team_annual",
+            "orbSubscription": {"plan": {"name": "Factory Pro Annual Plan"}},
+        },
+    },
+}
+usage, credits = collect.factory_usage_from_payloads(auth, limits, None, None)
+assert usage["primary"]["label"] == "5h"
+assert usage["primary"]["usedPercent"] == 2
+assert usage["secondary"]["label"] == "Weekly"
+assert usage["tertiary"]["label"] == "Monthly"
+assert [extra["title"] for extra in usage["extraRateWindows"]] == ["Core 5h", "Core 7-day", "Core Monthly"]
+assert usage["extraRateWindows"][0]["window"]["usedPercent"] == 0
+assert "Factory Team Annual" in usage["loginMethod"]
+assert credits["remaining"] == 0
+assert credits["label"] == "Extra usage"
+legacy_usage, _ = collect.factory_usage_from_payloads(auth, None, {
+    "usage": {
+        "endDate": 1800864000000,
+        "standard": {"userTokens": 40, "totalAllowance": 100, "usedRatio": 0.4},
+        "premium": {"userTokens": 10, "totalAllowance": 100, "usedRatio": 0.1},
+    }
+}, None)
+assert legacy_usage["primary"]["label"] == "Standard"
+assert legacy_usage["primary"]["usedPercent"] == 40
+assert legacy_usage["secondary"]["label"] == "Premium"
 merged = collect.merge_kimi_rows([
     {
         "source": "cli",
@@ -87,4 +143,7 @@ assert '"Weekly"' in source
 assert "Codex Spark" in source
 assert "accounts.x.ai/api/auth/session" in source
 assert "zed-github-account" in source
+assert "api.factory.ai/api/billing/limits" in source
+assert "Factory CLI" in source
+assert "auth.v2.keyring" in source
 print("collect tests passed")

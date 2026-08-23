@@ -80,7 +80,7 @@ const rows = model.providersFromSnapshot(
   Array.from(providers.enabledIds({})),
   providers.catalog(),
 )
-assert.strictEqual(rows.length, 7)
+assert.strictEqual(rows.length, 8)
 assert.strictEqual(rows.every((row) => providers.isSupported(row.id)), true)
 assert.strictEqual(rows.some((row) => row.id === "claude"), false)
 
@@ -131,6 +131,12 @@ const grokIcon = model.iconWindows(grokRow)
 assert.strictEqual(grokIcon.weeklyRemaining, 8)
 assert.strictEqual(grokIcon.sessionRemaining, null)
 assert.strictEqual(model.windowTitle("Credits", "", null), "Weekly")
+assert.strictEqual(model.windowTitle("5h", "", 300), "5h")
+assert.strictEqual(model.windowTitle("5-hour", "", 300), "5h")
+assert.strictEqual(model.windowTitle("7-day", "", 10080), "Weekly")
+assert.strictEqual(model.windowTitle("Core 5h", "", 300), "Core 5h")
+assert.strictEqual(model.windowTitle("Core 7-day", "", 10080), "Core 7-day")
+assert.strictEqual(model.windowTitle("Core Monthly", "", null), "Core Monthly")
 assert.strictEqual(model.windowTitle("6-hour", "", 360), "Rolling")
 assert.strictEqual(model.windowTitle("Rolling", "", 360), "Rolling")
 const notionWindows = {
@@ -154,6 +160,51 @@ const sparkWindows = {
 const sparkIcon = model.iconWindows(sparkWindows)
 assert.strictEqual(sparkIcon.weeklyRemaining, 90)
 assert.strictEqual(sparkIcon.sessionRemaining, null)
+const factoryLimits = {
+  windows: [
+    { title: "5h", usedPercent: 2 },
+    { title: "Weekly", usedPercent: 8 },
+    { title: "Monthly", usedPercent: 27 },
+    { title: "Core 5h", usedPercent: 0 },
+    { title: "Core 7-day", usedPercent: 0 },
+    { title: "Core Monthly", usedPercent: 0 }
+  ]
+}
+const factoryIcon = model.iconWindows(factoryLimits)
+assert.strictEqual(factoryIcon.weeklyRemaining, 92)
+assert.strictEqual(factoryIcon.sessionRemaining, 98)
+const factorySnapshot = {
+  providers: [{
+    provider: "factory",
+    usage: {
+      primary: { usedPercent: 2, windowMinutes: 300, label: "5h" },
+      secondary: { usedPercent: 8, windowMinutes: 10080, label: "Weekly" },
+      tertiary: { usedPercent: 27, label: "Monthly" },
+      extraRateWindows: [
+        { title: "Core 5h", window: { usedPercent: 0, windowMinutes: 300, label: "Core 5h" } },
+        { title: "Core 7-day", window: { usedPercent: 0, windowMinutes: 10080, label: "Core 7-day" } },
+        { title: "Core Monthly", window: { usedPercent: 0, label: "Core Monthly" } }
+      ]
+    },
+    credits: { remaining: 0, unit: "usd", label: "Extra usage" }
+  }]
+}
+const factoryRows = model.providersFromSnapshot(factorySnapshot, ["factory"], providers.catalog())
+assert.strictEqual(
+  Array.from(factoryRows[0].windows).map((row) => row.title).join("|"),
+  "5h|Weekly|Monthly|Core 5h|Core 7-day|Core Monthly",
+)
+assert.strictEqual(factoryRows[0].creditsLabel, "Extra usage")
+assert.strictEqual(factoryRows[0].creditsRemaining, 0)
+const factoryLegacy = {
+  windows: [
+    { title: "Standard", usedPercent: 40 },
+    { title: "Premium", usedPercent: 10 }
+  ]
+}
+const factoryLegacyIcon = model.iconWindows(factoryLegacy)
+assert.strictEqual(factoryLegacyIcon.weeklyRemaining, 90)
+assert.strictEqual(factoryLegacyIcon.sessionRemaining, 60)
 assert.strictEqual(model.prettyPlan("grok", "SuperGrok Heavy"), "SuperGrok Heavy")
 assert.strictEqual(model.prettyPlan("grok", "Premium"), "X Premium")
 assert.strictEqual(model.prettyPlan("grok", "Free"), "Free")
@@ -168,6 +219,7 @@ assert.strictEqual(model.prettyPlan("kimi", "LEVEL_INTERMEDIATE"), "LEVEL INTERM
 assert.strictEqual(model.prettyPlan("notion", "business"), "Business")
 assert.strictEqual(model.prettyPlan("cursor", "pro_plus"), "Pro+")
 assert.strictEqual(model.prettyPlan("zed", "zed_student"), "Student")
+assert.strictEqual(model.prettyPlan("factory", "team_annual"), "Team Annual")
 assert.strictEqual(model.heroMeta(codex), "Plus · user@example.com")
 assert.strictEqual(
   model.formatDuration(2 * 3600 * 1000 + 12 * 60 * 1000),

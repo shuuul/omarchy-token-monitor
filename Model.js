@@ -26,6 +26,7 @@ function emptyDisplay() {
     binding: null,
     creditsRemaining: null,
     creditsUnit: "",
+    creditsLabel: "",
     costToday: null,
     costLast30Days: null,
     paceSummary: "",
@@ -185,6 +186,15 @@ function titleCaseLabel(label) {
 function windowTitle(label, kind, minutes) {
   var text = String(label || "").toLowerCase()
   var kindText = String(kind || "").toLowerCase()
+  if (text.indexOf("core") >= 0) {
+    if (text.indexOf("5h") >= 0 || text.indexOf("5-hour") >= 0 || text.indexOf("five-hour") >= 0 || minutes === 300)
+      return "Core 5h"
+    if (text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0 || minutes === 10080)
+      return "Core 7-day"
+    if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0)
+      return "Core Monthly"
+    return titleCaseLabel(label)
+  }
   if (kindText === "weekly" || text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0) {
     if (text.indexOf("spark") >= 0) return "Codex Spark Weekly"
     return "Weekly"
@@ -194,11 +204,13 @@ function windowTitle(label, kind, minutes) {
     return "Session"
   }
   if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return "Monthly"
+  if (text.indexOf("5h") >= 0 || text.indexOf("5-hour") >= 0 || text.indexOf("five-hour") >= 0 || text.indexOf("five hour") >= 0)
+    return "5h"
   if (text.indexOf("roll") >= 0 || text.indexOf("6-hour") >= 0 || text.indexOf("6h") >= 0) return "Rolling"
   if (text.indexOf("day") >= 0 || text.indexOf("daily") >= 0) return "Daily"
   if (text.indexOf("credit") >= 0) return "Weekly"
   if (minutes === 10080) return "Weekly"
-  if (minutes === 300) return "Session"
+  if (minutes === 300) return "5h"
   return titleCaseLabel(label)
 }
 
@@ -283,12 +295,16 @@ function iconWindows(provider) {
   }
   var weekly = findWindowByTitle(windows, "Weekly")
     || findWindowByTitle(windows, "Cursor Models")
+    || findWindowByTitle(windows, "Premium")
     || findWindowByTitle(windows, "Monthly")
   var session = findWindowByTitle(windows, "Session")
+    || findWindowByTitle(windows, "5h")
+    || findWindowByTitle(windows, "5-hour")
     || findWindowByTitle(windows, "Third-Party")
     || findWindowByTitle(windows, "Third-party")
     || findWindowByTitle(windows, "Third party")
     || findWindowByTitle(windows, "Rolling")
+    || findWindowByTitle(windows, "Standard")
   if (weekly && session && weekly === session) session = null
   if (!weekly && !session && named.length === 1) weekly = named[0]
   if (!weekly && named.length > 0 && named[0] !== session && String(named[0].title || "") !== "Session")
@@ -335,6 +351,7 @@ function displayProvider(row, descriptor) {
   var credits = row.credits || {}
   display.creditsRemaining = asNumber(credits.remaining)
   display.creditsUnit = String(credits.unit || "credits")
+  display.creditsLabel = String(credits.label || "")
   var cost = row.cost || {}
   display.costToday = asNumber(cost.todayUSD)
   display.costLast30Days = asNumber(cost.last30DaysUSD)
@@ -617,6 +634,14 @@ function prettyPlanPart(providerId, raw) {
       zed_trial: "Trial",
       zed_student: "Student",
       zed_business: "Business"
+    },
+    factory: {
+      hobby: "Hobby",
+      pro: "Pro",
+      team: "Team",
+      team_annual: "Team Annual",
+      enterprise: "Enterprise",
+      factory_pro_annual_plan: "Factory Pro Annual Plan"
     }
   }
   var mapped = maps[id] && maps[id][key]

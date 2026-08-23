@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "shuuul",
   "license": "MIT",
-  "description": "Amp, Codex, Kimi Code, Cursor, Grok, Notion AI, and Zed quotas in the Omarchy bar.",
+  "description": "Amp, Codex, Kimi Code, Cursor, Grok, Notion AI, Zed, and Droid quotas in the Omarchy bar.",
   "kinds": ["bar-widget"],
   "activation": "on-demand",
   "entryPoints": {
@@ -13,7 +13,7 @@
   },
   "barWidget": {
     "displayName": "Token Monitor",
-    "description": "One bar meter and one panel: session, weekly, credits, and pace for the seven supported providers.",
+    "description": "One bar meter and one panel: session, weekly, credits, and pace for the supported providers.",
     "category": "AI",
     "aliases": [
       "codexbar",
@@ -24,7 +24,9 @@
       "cursor",
       "grok",
       "notion",
-      "zed"
+      "zed",
+      "factory",
+      "droid"
     ],
     "allowMultiple": false,
     "defaultSection": "right",
@@ -38,7 +40,8 @@
         "cursor": { "enabled": true },
         "grok": { "enabled": true },
         "notion": { "enabled": true },
-        "zed": { "enabled": true }
+        "zed": { "enabled": true },
+        "factory": { "enabled": true }
       }
     },
     "schema": [
