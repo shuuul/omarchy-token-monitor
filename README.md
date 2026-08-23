@@ -14,7 +14,7 @@ Supported providers, IDs matching CodexBar exactly:
 | Notion AI | `notion` |
 | Zed | `zed` |
 
-This plugin does not talk to those vendors. It runs `codexbar usage --format json --json-only` and draws that snapshot. `codexbar dashboard` 0.53.0 segfaults on this machine.
+This plugin talks to the vendor APIs itself. Chrome/Chromium cookies cover Cursor, Notion, Grok, and Amp. Codex uses `~/.codex/auth.json`. Amp prefers `amp usage`. Kimi uses the Kimi Code CLI token. Zed has no Linux cookie path yet.
 
 ## Why wrap CodexBar
 
@@ -31,21 +31,9 @@ Reimplementing Amp / Codex / Kimi / Cursor / Grok / Notion / Zed auth would drif
 
 ## Install
 
-1. Install the CodexBar Linux CLI (`yay -S codexbar-cli`, or a [release tarball](https://github.com/steipete/CodexBar/releases)).
-2. Sign in through each vendor's own CLI or put credentials in `~/.config/codexbar/config.json`.
-3. Enable only the seven providers above:
-
-```bash
-codexbar config enable --provider amp
-codexbar config enable --provider codex
-codexbar config enable --provider kimi
-codexbar config enable --provider cursor
-codexbar config enable --provider grok
-codexbar config enable --provider notion
-codexbar config enable --provider zed
-```
-
-4. Add the plugin:
+1. Sign in to Chrome (or Chromium) for Cursor, Notion, Grok, and Amp.
+2. Sign in locally for Codex (`codex login`) and Amp (`amp`).
+3. Add the plugin:
 
 ```bash
 omarchy plugin add <this-git-url> --enable
@@ -76,7 +64,7 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `codexbarPath` | `codexbar` | CLI command or absolute path |
+| `browser` | `chrome` | `chrome` or `chromium` cookies |
 | `refreshIntervalSec` | `300` | Poll interval |
 | `providers.<id>.enabled` | `true` | Hide one of the seven without changing CodexBar |
 

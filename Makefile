@@ -8,6 +8,7 @@ test: test-js test-shell
 test-js:
 	node tests/test_providers.js
 	node tests/test_model.js
+	python3 tests/test_collect.py
 
 test-shell:
 	python3 tests/test_qml_names.py

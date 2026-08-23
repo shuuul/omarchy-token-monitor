@@ -99,13 +99,38 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: usage.barLabel
+    labelVisible: false
     tooltipText: usage.barTooltip
     active: root.alarming
-    horizontalMargin: 8.75
+    horizontalMargin: 10
+    fixedWidth: barRow.implicitWidth + Style.space(16)
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.RightButton) root.refreshNow()
       else if (buttonCode === Qt.MiddleButton) root.selectProvider(root.providerIndex + 1)
       else root.toggle()
+    }
+
+    Row {
+      id: barRow
+      anchors.centerIn: parent
+      spacing: Style.space(6)
+
+      Image {
+        id: barIcon
+        width: Style.font.body
+        height: Style.font.body
+        source: Qt.resolvedUrl("assets/" + usage.barIconId + ".svg")
+        sourceSize.width: Style.font.body * 2
+        sourceSize.height: Style.font.body * 2
+        fillMode: Image.PreserveAspectFit
+      }
+
+      Text {
+        text: usage.barLabel
+        color: button.active ? button.activeColor : button.foreground
+        font.family: button.fontFamily
+        font.pixelSize: button.fontSize
+      }
     }
   }
 
@@ -197,7 +222,7 @@ Panel {
                 required property int index
 
                 width: providerSwitch.cellWidth
-                text: modelData.monogram
+                text: modelData.name
                 selected: index === root.providerIndex
                 hasCursor: root.cursorActive && index === root.providerIndex
                 bordered: true

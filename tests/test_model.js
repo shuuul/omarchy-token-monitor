@@ -4,22 +4,13 @@ const { load } = require("./load")
 const model = load("Model.js")
 const providers = load("Providers.js")
 
-assert.deepStrictEqual(Array.from(model.usageCommand({})), [
-  "codexbar",
-  "usage",
-  "--format",
-  "json",
-  "--json-only",
+assert.deepStrictEqual(Array.from(model.collectCommand({})), [
+  "python3",
+  "collect.py",
 ])
 assert.deepStrictEqual(
-  Array.from(model.usageCommand({ codexbarPath: "/home/shu/.local/bin/codexbar" }))[0],
-  "/home/shu/.local/bin/codexbar",
-)
-assert.deepStrictEqual(
-  Array.from(model.usageCommand({
-    codexbarPath: "/opt/codexbar",
-  })),
-  ["/opt/codexbar", "usage", "--format", "json", "--json-only"],
+  Array.from(model.collectCommand({ collectPath: "/tmp/collect.py" })),
+  ["python3", "/tmp/collect.py"],
 )
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 12 }), 30)
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 9000 }), 3600)
@@ -93,7 +84,8 @@ assert.strictEqual(kimi.windows.length, 0)
 assert.strictEqual(kimi.binding, null)
 
 assert.strictEqual(model.barHeadline(rows).id, "cursor")
-assert.strictEqual(model.barText(rows, false), "Cu 91%")
+assert.strictEqual(model.barText(rows, false), "Cursor 91%")
+assert.strictEqual(model.barIconId(rows, false), "cursor")
 assert.ok(model.barTooltip(rows, false).includes("Cursor 91%"))
 assert.strictEqual(model.formatCredits(112.4, "credits"), "112.4 credits")
 assert.strictEqual(model.formatMoney(1.04), "$1.04")

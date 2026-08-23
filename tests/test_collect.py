@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+import importlib.util
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+spec = importlib.util.spec_from_file_location("collect", ROOT / "collect.py")
+collect = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(collect)
+
+text = """
+Signed in as zetarylee@gmail.com (shuuul)
+**Amp Free:** 99% remaining today (resets daily)
+**Amp Megawatt Subscription:** 95% other usage and 97% orb usage remaining - resets upon renewal in 6 days
+**Individual credits:** $3.23 remaining
+"""
+parsed = collect.parse_amp_text(text)
+assert parsed["provider"] == "amp"
+assert parsed["usage"]["primary"]["usedPercent"] == 1
+assert parsed["usage"]["secondary"]["usedPercent"] == 5
+assert parsed["usage"]["tertiary"]["usedPercent"] == 3
+assert parsed["credits"]["remaining"] == 3.23
+
+payload = bytes.fromhex("0000000056") + b"\nT" + b"\r\x00\x00\x82B"
+# The live parser is covered by the live collector; keep a structural check here.
+row = collect.row("grok", source="chrome", error="x")
+assert row["error"]["message"] == "x"
+print("collect tests passed")

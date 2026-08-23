@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# CodexBar owns provider fetch. This plugin must stay a dashboard wrapper.
-grep -Fq 'codexbar' Model.js
-grep -Fq '"usage"' Model.js
-grep -Fq '"--json-only"' Model.js
-grep -Fq 'Model.usageCommand(settings)' Service.qml
+# Vendor HTTP stays in collect.py. QML only renders.
+grep -Fq 'collect.py' Model.js
+grep -Fq 'python3' Model.js
+grep -Fq 'Model.collectCommand({' Service.qml
 ! grep -Eq 'ampcode.com|chatgpt.com|api.kimi.com|cursor.com|cli-chat-proxy.grok.com|app.notion.com|cloud.zed.dev' \
   Model.js Providers.js Service.qml Panel.qml
+grep -Fq 'ampcode.com' collect.py
 
 # The supported set is closed and uses CodexBar IDs exactly.
 grep -Fq '{ id: "amp", name: "Amp"' Providers.js

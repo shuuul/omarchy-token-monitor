@@ -49,13 +49,20 @@ function commandPath(settings) {
   return value === "" ? DEFAULT_CODEXBAR_PATH : value
 }
 
+function collectScript() {
+  if (typeof Qt !== "undefined" && Qt.resolvedUrl)
+    return Qt.resolvedUrl("collect.py").toString().replace(/^file:\/\//, "")
+  return "collect.py"
+}
+
+function collectCommand(settings) {
+  var script = settings && settings.collectPath ? String(settings.collectPath) : ""
+  if (!script) script = collectScript()
+  return ["python3", script]
+}
+
 function usageCommand(settings) {
-  return [
-    commandPath(settings),
-    "usage",
-    "--format", "json",
-    "--json-only"
-  ]
+  return collectCommand(settings)
 }
 
 function lastJsonValue(text) {
@@ -273,12 +280,22 @@ function barHeadline(providers) {
 function barText(providers, loading) {
   if (loading && (!providers || providers.length === 0)) return "…"
   var headline = barHeadline(providers)
-  if (headline) return headline.monogram + " " + Math.round(headline.binding.usedPercent) + "%"
+  if (headline) return headline.name + " " + Math.round(headline.binding.usedPercent) + "%"
   if (!providers || providers.length === 0) return "—"
   for (var i = 0; i < providers.length; i++) {
-    if (providers[i] && providers[i].error) return "ERR"
+    if (providers[i] && providers[i].error) return providers[i].name
   }
-  return "—"
+  return "Token Monitor"
+}
+
+function barIconId(providers, loading) {
+  var headline = barHeadline(providers)
+  if (headline) return headline.id
+  var rows = Array.isArray(providers) ? providers : []
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i] && rows[i].id) return rows[i].id
+  }
+  return "codex"
 }
 
 function barTooltip(providers, missingCli) {

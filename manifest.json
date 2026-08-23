@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "shuuul",
   "license": "MIT",
-  "description": "CodexBar quotas for Amp, Codex, Kimi Code, Cursor, Grok, Notion AI, and Zed in the Omarchy bar.",
+  "description": "Amp, Codex, Kimi Code, Cursor, Grok, Notion AI, and Zed quotas in the Omarchy bar.",
   "kinds": ["bar-widget"],
   "activation": "on-demand",
   "entryPoints": {
@@ -13,7 +13,7 @@
   },
   "barWidget": {
     "displayName": "Token Monitor",
-    "description": "One bar meter and one panel: CodexBar session, weekly, credits, and pace for the seven supported providers.",
+    "description": "One bar meter and one panel: session, weekly, credits, and pace for the seven supported providers.",
     "category": "AI",
     "aliases": [
       "codexbar",
@@ -29,7 +29,7 @@
     "allowMultiple": false,
     "defaultSection": "right",
     "defaults": {
-      "codexbarPath": "codexbar",
+      "browser": "chrome",
       "refreshIntervalSec": 300,
       "providers": {
         "amp": { "enabled": true },
@@ -43,11 +43,12 @@
     },
     "schema": [
       {
-        "key": "codexbarPath",
-        "type": "string",
-        "label": "CodexBar command",
-        "defaultValue": "codexbar",
-        "description": "Command or absolute path for the CodexBar Linux CLI."
+        "key": "browser",
+        "type": "enum",
+        "label": "Browser cookies",
+        "options": ["chrome", "chromium"],
+        "defaultValue": "chrome",
+        "description": "Read session cookies from this Chromium-based browser."
       },
       {
         "key": "refreshIntervalSec",

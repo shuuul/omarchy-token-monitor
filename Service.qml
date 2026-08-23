@@ -32,11 +32,19 @@ Item {
   }
   readonly property bool busy: dashboardProcess.running
   readonly property string barLabel: Model.barText(providers, busy && !hasSnapshot)
+  readonly property string barIconId: Model.barIconId(providers, busy && !hasSnapshot)
   readonly property string barTooltip: Model.barTooltip(providers, missingCli)
+
+  readonly property string pluginDir: {
+    var url = Qt.resolvedUrl("collect.py").toString()
+    return url.replace(/^file:\/\//, "").replace(/\/collect\.py$/, "")
+  }
 
   function refresh() {
     if (dashboardProcess.running) return
-    dashboardProcess.command = Model.usageCommand(settings)
+    dashboardProcess.command = Model.collectCommand({
+      collectPath: root.pluginDir + "/collect.py"
+    })
     dashboardProcess.running = true
   }
 
