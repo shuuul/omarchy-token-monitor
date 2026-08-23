@@ -207,11 +207,11 @@ Panel {
             wrapMode: Text.WordWrap
           }
 
-          Column {
+          Flow {
             id: providerSwitch
             visible: root.providers.length > 1
             width: parent.width
-            spacing: Style.space(4)
+            spacing: Style.space(6)
 
             Repeater {
               model: root.providers
@@ -220,8 +220,6 @@ Panel {
                 required property var modelData
                 required property int index
 
-                width: providerSwitch.width
-                leftAlign: true
                 text: modelData.name
                 selected: index === root.providerIndex
                 hasCursor: root.cursorActive && index === root.providerIndex
