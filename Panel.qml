@@ -267,7 +267,10 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(column.implicitHeight, Style.space(640))
+    // No height cap: the panel expands to fit every provider row.
+    // fittedContentHeight still clamps to the screen, and panelFlick
+    // scrolls (ScrollBar.AsNeeded) when content outgrows the screen.
+    contentHeight: panel.fittedContentHeight(column.implicitHeight)
 
     PanelKeyCatcher {
       id: keyCatcher
