@@ -36,7 +36,7 @@ Item {
 
   function refresh() {
     if (dashboardProcess.running) return
-    dashboardProcess.command = Model.dashboardCommand(settings)
+    dashboardProcess.command = Model.usageCommand(settings)
     dashboardProcess.running = true
   }
 

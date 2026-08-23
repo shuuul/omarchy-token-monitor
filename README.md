@@ -14,7 +14,7 @@ Supported providers, IDs matching CodexBar exactly:
 | Notion AI | `notion` |
 | Zed | `zed` |
 
-This plugin does not talk to those vendors. It runs `codexbar dashboard` and draws the dashboard-v1 snapshot.
+This plugin does not talk to those vendors. It runs `codexbar usage --format json --json-only` and draws that snapshot. `codexbar dashboard` 0.53.0 segfaults on this machine.
 
 ## Why wrap CodexBar
 
@@ -78,7 +78,6 @@ In `~/.config/omarchy/shell.json`, on the `shuuul.token-monitor` entry:
 | --- | --- | --- |
 | `codexbarPath` | `codexbar` | CLI command or absolute path |
 | `refreshIntervalSec` | `300` | Poll interval |
-| `identityMode` | `full` | `full` or `redacted` for emails |
 | `providers.<id>.enabled` | `true` | Hide one of the seven without changing CodexBar |
 
 Nested enablement needs the whole object:

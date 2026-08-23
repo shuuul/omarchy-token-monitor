@@ -1,22 +1,15 @@
 .pragma library
 
-// Pure CodexBar dashboard-v1 parsing and formatting. QML owns theme and
+// Pure CodexBar usage JSON parsing and formatting. QML owns theme and
 // process I/O; this file is what the node tests exercise.
 
 var DEFAULT_CODEXBAR_PATH = "codexbar"
 var DEFAULT_REFRESH_SEC = 300
 var MIN_REFRESH_SEC = 30
 var MAX_REFRESH_SEC = 3600
-var FETCH_TIMEOUT_SEC = 60
 
 function emptySnapshot() {
-  return {
-    schemaVersion: 0,
-    generatedAt: "",
-    staleAfterSeconds: 180,
-    host: { codexBarVersion: "", refreshIntervalSeconds: 0 },
-    providers: []
-  }
+  return { providers: [] }
 }
 
 function emptyDisplay() {
@@ -50,38 +43,33 @@ function refreshIntervalSec(settings) {
   return Math.max(MIN_REFRESH_SEC, Math.min(MAX_REFRESH_SEC, value))
 }
 
-function identityMode(settings) {
-  var raw = settings ? settings.identityMode : undefined
-  return String(raw || "full") === "redacted" ? "redacted" : "full"
-}
-
 function commandPath(settings) {
   var raw = settings ? settings.codexbarPath : undefined
   var value = String(raw === undefined || raw === null ? "" : raw).trim()
   return value === "" ? DEFAULT_CODEXBAR_PATH : value
 }
 
-function dashboardCommand(settings) {
+function usageCommand(settings) {
   return [
     commandPath(settings),
-    "dashboard",
-    "--identity", identityMode(settings),
-    "--timeout", String(FETCH_TIMEOUT_SEC)
+    "usage",
+    "--format", "json",
+    "--json-only"
   ]
 }
 
-function versionCommand(settings) {
-  return [commandPath(settings), "--version"]
-}
-
-function lastJsonObject(text) {
+function lastJsonValue(text) {
   var source = String(text || "").trim()
   if (source === "") return null
   try {
     return JSON.parse(source)
   } catch (ignored) {
   }
-  var start = source.indexOf("{")
+  var arrayStart = source.indexOf("[")
+  var objectStart = source.indexOf("{")
+  var start = -1
+  if (arrayStart >= 0 && (objectStart < 0 || arrayStart < objectStart)) start = arrayStart
+  else start = objectStart
   if (start < 0) return null
   try {
     return JSON.parse(source.slice(start))
@@ -91,26 +79,25 @@ function lastJsonObject(text) {
 }
 
 function parseSnapshot(text) {
-  var data = lastJsonObject(text)
-  if (!data || typeof data !== "object" || Array.isArray(data)) return null
-  if (Number(data.schemaVersion) !== 1) return null
-  if (!Array.isArray(data.providers)) return null
-  return data
+  var data = lastJsonValue(text)
+  if (Array.isArray(data)) return { providers: data }
+  if (data && typeof data === "object") {
+    if (Array.isArray(data.providers)) return data
+    if (data.provider || data.usage || data.error) return { providers: [data] }
+  }
+  return null
 }
 
 function parseError(text, exitCode) {
-  var data = lastJsonObject(text)
-  if (data && data.error) {
-    if (typeof data.error === "string" && data.error !== "") return data.error
-    if (data.error.message) return String(data.error.message)
-  }
+  var data = lastJsonValue(text)
+  if (data && !Array.isArray(data) && data.error) return errorText(data.error)
   var trimmed = String(text || "").trim()
   if (trimmed !== "") {
     var lines = trimmed.split("\n")
     return lines[lines.length - 1]
   }
   if (exitCode === 2) return "codexbar is not on PATH"
-  if (exitCode === 4) return "codexbar timed out"
+  if (exitCode === 139) return "codexbar crashed"
   if (exitCode) return "codexbar exited " + exitCode
   return "codexbar returned no snapshot"
 }
@@ -121,48 +108,67 @@ function asNumber(value) {
   return isFinite(number) ? number : null
 }
 
-function windowUsed(window) {
-  if (!window || typeof window !== "object") return null
-  var used = asNumber(window.usedPercent)
-  if (used !== null) return used
-  var remaining = asNumber(window.remainingPercent)
-  if (remaining === null) return null
-  return Math.max(0, Math.min(100, 100 - remaining))
-}
-
-function normalizeWindow(window) {
-  if (!window || typeof window !== "object") return null
-  if (window.idle === true) return null
-  var used = windowUsed(window)
-  if (used === null) return null
-  var label = String(window.label || window.kind || "Limit")
-  return {
-    kind: String(window.kind || ""),
-    label: label,
-    title: windowTitle(label, window.kind),
-    usedPercent: used,
-    remainingPercent: asNumber(window.remainingPercent),
-    resetAt: String(window.resetAt || window.resetsAt || "")
+function errorText(value) {
+  if (value === undefined || value === null || value === false) return ""
+  if (typeof value === "string") return value
+  if (typeof value === "object") {
+    if (value.message) return String(value.message)
+    if (value.error) return errorText(value.error)
   }
+  return String(value)
 }
 
-function windowTitle(label, kind) {
+function windowTitle(label, kind, minutes) {
   var text = String(label || "").toLowerCase()
   var kindText = String(kind || "").toLowerCase()
   if (kindText === "session" || text.indexOf("session") >= 0) return "Session"
   if (kindText === "weekly" || text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0) return "Weekly"
   if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return "Monthly"
   if (text.indexOf("day") >= 0 || text.indexOf("daily") >= 0) return "Daily"
+  if (minutes === 300) return "Session"
+  if (minutes === 10080) return "Weekly"
   var plain = String(label || "").replace(/\s*\(.*\)\s*/, "").trim()
   return plain === "" ? "Limit" : plain
 }
 
-function normalizeWindows(list) {
+function normalizeRateWindow(raw, label, kind) {
+  if (!raw || typeof raw !== "object") return null
+  if (raw.idle === true) return null
+  var used = asNumber(raw.usedPercent)
+  if (used === null && asNumber(raw.remainingPercent) !== null)
+    used = Math.max(0, Math.min(100, 100 - asNumber(raw.remainingPercent)))
+  if (used === null) return null
+  var minutes = asNumber(raw.windowMinutes)
+  var title = windowTitle(label || raw.label || raw.title, kind || raw.kind, minutes)
+  return {
+    kind: String(kind || raw.kind || ""),
+    label: String(label || raw.label || raw.title || title),
+    title: title,
+    usedPercent: used,
+    remainingPercent: asNumber(raw.remainingPercent),
+    resetAt: String(raw.resetAt || raw.resetsAt || "")
+  }
+}
+
+function collectWindows(usage) {
   var out = []
-  var rows = Array.isArray(list) ? list : []
-  for (var i = 0; i < rows.length; i++) {
-    var window = normalizeWindow(rows[i])
+  if (!usage || typeof usage !== "object") return out
+  var primary = normalizeRateWindow(usage.primary, "Session", "session")
+  var secondary = normalizeRateWindow(usage.secondary, "Weekly", "weekly")
+  var tertiary = normalizeRateWindow(usage.tertiary, usage.tertiary && usage.tertiary.label, "tertiary")
+  if (primary) out.push(primary)
+  if (secondary) out.push(secondary)
+  if (tertiary) out.push(tertiary)
+  var extras = Array.isArray(usage.extraRateWindows) ? usage.extraRateWindows : []
+  for (var i = 0; i < extras.length; i++) {
+    var extra = extras[i] || {}
+    var window = normalizeRateWindow(extra.window || extra, extra.title || extra.label, extra.id || extra.kind)
     if (window) out.push(window)
+  }
+  var listed = Array.isArray(usage.windows) ? usage.windows : []
+  for (var j = 0; j < listed.length; j++) {
+    var listedWindow = normalizeRateWindow(listed[j], listed[j] && listed[j].label, listed[j] && listed[j].kind)
+    if (listedWindow) out.push(listedWindow)
   }
   return out
 }
@@ -173,16 +179,6 @@ function bindingWindow(windows) {
     if (!best || windows[i].usedPercent > best.usedPercent) best = windows[i]
   }
   return best
-}
-
-function errorText(value) {
-  if (value === undefined || value === null || value === false) return ""
-  if (typeof value === "string") return value
-  if (typeof value === "object") {
-    if (value.message) return String(value.message)
-    if (value.error) return errorText(value.error)
-  }
-  return String(value)
 }
 
 function firstPaceSummary(pace) {
@@ -197,7 +193,7 @@ function firstPaceSummary(pace) {
 
 function displayProvider(row, descriptor) {
   var display = emptyDisplay()
-  var id = String((row && row.id) || (descriptor && descriptor.id) || "")
+  var id = String((row && (row.id || row.provider)) || (descriptor && descriptor.id) || "")
   display.id = id
   display.name = (descriptor && descriptor.name) || String((row && row.name) || id)
   display.monogram = (descriptor && descriptor.monogram) || id.slice(0, 2)
@@ -206,22 +202,24 @@ function displayProvider(row, descriptor) {
   display.enabled = row.enabled !== false
   display.source = String(row.source || "")
   var status = row.status || {}
-  display.statusLevel = String(status.level || "")
-  display.statusLabel = String(status.label || "")
-  var identity = row.identity || {}
-  display.accountEmail = String(identity.accountEmail || "")
-  display.plan = String(identity.plan || "")
-  display.windows = normalizeWindows(row.windows)
+  display.statusLevel = String(status.level || status.indicator || "")
+  display.statusLabel = String(status.label || status.description || "")
+  var usage = row.usage || {}
+  var identity = usage.identity || row.identity || {}
+  display.accountEmail = String(identity.accountEmail || usage.accountEmail || "")
+  display.plan = String(identity.plan || identity.loginMethod || usage.loginMethod || "")
+  display.windows = collectWindows(usage)
+  if (display.windows.length === 0) display.windows = collectWindows(row)
   display.binding = bindingWindow(display.windows)
   var credits = row.credits || {}
   display.creditsRemaining = asNumber(credits.remaining)
-  display.creditsUnit = String(credits.unit || "")
+  display.creditsUnit = String(credits.unit || "credits")
   var cost = row.cost || {}
   display.costToday = asNumber(cost.todayUSD)
   display.costLast30Days = asNumber(cost.last30DaysUSD)
   display.paceSummary = firstPaceSummary(row.pace)
   display.error = errorText(row.error)
-  display.updatedAt = String(row.updatedAt || "")
+  display.updatedAt = String(usage.updatedAt || row.updatedAt || "")
   display.alarming = (!!display.binding && display.binding.usedPercent >= 90)
     || display.statusLevel === "critical"
     || display.error !== ""
@@ -233,7 +231,7 @@ function providersFromSnapshot(snapshot, enabledIds, catalog) {
   var list = snapshot && Array.isArray(snapshot.providers) ? snapshot.providers : []
   for (var i = 0; i < list.length; i++) {
     var row = list[i] || {}
-    var id = String(row.id || "")
+    var id = String(row.id || row.provider || "")
     if (id !== "") rows[id] = row
   }
 

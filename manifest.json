@@ -31,7 +31,6 @@
     "defaults": {
       "codexbarPath": "codexbar",
       "refreshIntervalSec": 300,
-      "identityMode": "full",
       "providers": {
         "amp": { "enabled": true },
         "codex": { "enabled": true },
@@ -58,14 +57,6 @@
         "max": 3600,
         "step": 30,
         "defaultValue": 300
-      },
-      {
-        "key": "identityMode",
-        "type": "enum",
-        "label": "Account identity",
-        "options": ["full", "redacted"],
-        "defaultValue": "full",
-        "description": "Passed to `codexbar dashboard --identity`. Redacted hides email local parts."
       }
     ]
   }

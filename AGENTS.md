@@ -14,7 +14,7 @@
 - Do not commit secrets, CodexBar config, cookies, or API keys.
 - Provider IDs must match CodexBar exactly: `amp`, `codex`, `kimi`, `cursor`, `grok`, `notion`, `zed`.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list.
-- Do not reimplement provider auth or HTTP. Call `codexbar dashboard` and render the dashboard-v1 snapshot.
+- Do not reimplement provider auth or HTTP. Call `codexbar usage --format json --json-only`. Do not use `codexbar dashboard` (0.53.0 segfaults).
 - QML colors come from `qs.Commons.Color` and `Style`. No hard-coded hex.
 - Nested `Component {}` blocks must not reference `root.`; `BarIconButton` and `PanelHero` also use that name.
 
@@ -23,8 +23,8 @@
 ```mermaid
 flowchart TD
   Bar["Panel.qml bar button"] --> Service["Service.qml"]
-  Service --> CLI["codexbar dashboard --identity"]
-  CLI --> Snapshot["dashboard-v1 JSON"]
+  Service --> CLI["codexbar usage --format json --json-only"]
+  CLI --> Snapshot["usage JSON array"]
   Snapshot --> Model["Model.js"]
   Model --> Panel["Panel.qml limits / credits"]
   Providers["Providers.js allow-list"] --> Model

@@ -3,8 +3,9 @@ set -euo pipefail
 
 # CodexBar owns provider fetch. This plugin must stay a dashboard wrapper.
 grep -Fq 'codexbar' Model.js
-grep -Fq '"dashboard"' Model.js
-grep -Fq '"--identity"' Model.js
+grep -Fq '"usage"' Model.js
+grep -Fq '"--json-only"' Model.js
+grep -Fq 'Model.usageCommand(settings)' Service.qml
 ! grep -Eq 'ampcode.com|chatgpt.com|api.kimi.com|cursor.com|cli-chat-proxy.grok.com|app.notion.com|cloud.zed.dev' \
   Model.js Providers.js Service.qml Panel.qml
 
@@ -24,7 +25,6 @@ grep -Fq 'ipcTarget: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'function refresh(): string' Panel.qml
 grep -Fq 'function next(): string' Panel.qml
 grep -Fq 'usage.refresh()' Panel.qml
-grep -Fq 'Model.dashboardCommand(settings)' Service.qml
 ! grep -Eq '\broot\.state\b' Service.qml Panel.qml
 
 # Nested Component blocks must not use an ambiguous `root.`
