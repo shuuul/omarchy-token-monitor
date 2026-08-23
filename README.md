@@ -11,6 +11,12 @@ Provider IDs match [CodexBar](https://github.com/steipete/CodexBar) exactly.
 The panel does not run the CodexBar CLI. It reads the same local sessions this
 machine already has: Chrome cookies, CLI auth files, and the Linux keyring.
 
+The provider list is deliberately limited to AI services I can test on this
+machine — every row in the sign-in map is verified against a live session, not
+an API guess. If you use a CodexBar provider that is missing here, or another
+AI coding service you want tracked, contributions are welcome, see
+[Contributing](#contributing).
+
 <img src="assets/screenshot.png" alt="Token Monitor panel showing Droid limits" height="560">
 
 ## Requirements
@@ -137,6 +143,26 @@ omarchy-shell shuuul.token-monitor refresh
 
 `rescanPlugins` only rediscovers plugin folders. It does not rebuild the
 Quickshell QML cache.
+
+## Contributing
+
+The allow-list intentionally covers only AI services I can test on this
+machine, so every meter in the panel is backed by a verified live session.
+Other developers are welcome to contribute the services they use every day.
+
+To add a provider:
+
+1. Implement the fetch in `collector/` and wire it into `collect.py`. Keep
+   cookies and tokens off stdout.
+2. Add the provider ID to the `Providers.js` allow-list (it must match
+   CodexBar exactly) and its parsing to `Model.js`, so node can test the
+   parsing without Quickshell.
+3. Add the monochrome icon at `assets/<id>.svg` — copied from CodexBar's
+   provider SVGs with fills rewritten to `#ffffff`, no monograms.
+4. Add a row to the sign-in map and update the panel description in
+   `manifest.json`.
+5. Run `make test` and `make validate`, then verify end to end on your own
+   live session before opening the pull request.
 
 ## License
 
