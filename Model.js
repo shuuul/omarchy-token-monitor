@@ -58,15 +58,7 @@ function collectScript() {
 function collectCommand(settings) {
   var script = settings && settings.collectPath ? String(settings.collectPath) : ""
   if (!script) script = collectScript()
-  var home = ""
-  if (typeof Quickshell !== "undefined" && Quickshell.env)
-    home = String(Quickshell.env("HOME") || "")
-  var path = (home ? home + "/.local/bin:" : "") + "/usr/bin:/bin"
-  return [
-    "/usr/bin/timeout", "25",
-    "/usr/bin/env", "PATH=" + path, "HOME=" + home,
-    "/usr/bin/python3", script
-  ]
+  return ["/usr/bin/timeout", "25", "/usr/bin/python3", script]
 }
 
 function usageCommand(settings) {

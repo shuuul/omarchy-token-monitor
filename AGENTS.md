@@ -35,6 +35,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Provider IDs must match CodexBar exactly: `amp`, `codex`, `kimi`, `cursor`, `grok`, `notion`, `zed`.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list.
 - Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.
+- `collect.py` must inherit the Omarchy shell environment. Do not rewrite `HOME` or `PATH` in the Process argv; an empty `HOME` makes Amp look like `No such file` and every cookie provider look signed out.
 - QML colors come from `qs.Commons.Color` and `Style`. No hard-coded hex.
 - Nested `Component {}` blocks must not reference `root.`; `BarIconButton` and `PanelHero` also use that name.
 

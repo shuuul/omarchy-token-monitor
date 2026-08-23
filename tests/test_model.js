@@ -4,15 +4,16 @@ const { load } = require("./load")
 const model = load("Model.js")
 const providers = load("Providers.js")
 
-assert.deepStrictEqual(Array.from(model.collectCommand({})).slice(-2), [
+assert.deepStrictEqual(Array.from(model.collectCommand({})), [
+  "/usr/bin/timeout",
+  "25",
   "/usr/bin/python3",
   "collect.py",
 ])
 assert.deepStrictEqual(
-  Array.from(model.collectCommand({ collectPath: "/tmp/collect.py" })).slice(-2),
-  ["/usr/bin/python3", "/tmp/collect.py"],
+  Array.from(model.collectCommand({ collectPath: "/tmp/collect.py" })),
+  ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py"],
 )
-assert.ok(Array.from(model.collectCommand({})).includes("/usr/bin/timeout"))
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 12 }), 30)
 assert.strictEqual(model.refreshIntervalSec({ refreshIntervalSec: 9000 }), 3600)
 

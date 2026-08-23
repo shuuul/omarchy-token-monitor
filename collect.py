@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import pwd
 import re
 import shutil
 import sqlite3
@@ -25,7 +26,14 @@ UA = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
 )
-HOME = Path.home()
+def user_home() -> Path:
+    env = os.environ.get("HOME")
+    if env:
+        return Path(env)
+    return Path(pwd.getpwuid(os.getuid()).pw_dir)
+
+
+HOME = user_home()
 CTX = ssl.create_default_context()
 
 PROVIDERS = ("amp", "codex", "kimi", "cursor", "grok", "notion", "zed")
@@ -383,9 +391,15 @@ def parse_amp_text(text: str) -> dict:
 
 
 def fetch_amp(jars: dict) -> dict:
-    proc = subprocess.run(["amp", "usage"], capture_output=True, text=True, timeout=25, check=False)
-    if proc.returncode == 0 and "Amp Free" in (proc.stdout or ""):
-        return parse_amp_text(proc.stdout)
+    amp = shutil.which("amp")
+    if amp:
+        proc = subprocess.run([amp, "usage"], capture_output=True, text=True, timeout=25, check=False)
+        if proc.returncode == 0 and "Amp Free" in (proc.stdout or ""):
+            return parse_amp_text(proc.stdout)
+        if proc.returncode != 0:
+            detail = (proc.stderr or proc.stdout or "").strip().splitlines()
+            detail = detail[-1] if detail else f"exit {proc.returncode}"
+            return row("amp", source="cli", error=f"amp usage failed: {detail}")
     header = cookie_header(jars, [("session", ["ampcode.com"])])
     if not header:
         return row("amp", source="chrome", error="Sign in to ampcode.com in Chrome, or run `amp`.")

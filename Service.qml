@@ -90,6 +90,8 @@ Item {
       var stdout = String(dashboardStdout.text || "")
       var stderr = String(dashboardStderr.text || "")
       root.applyOutput(stdout !== "" ? stdout : stderr, exitCode)
+      if (exitCode !== 0 && stderr !== "")
+        console.warn("token-monitor", stderr.trim())
     }
   }
 }
