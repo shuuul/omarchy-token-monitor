@@ -107,7 +107,7 @@ Panel {
     text: usage.barLabelFor(selectedProviderId)
     labelVisible: false
     tooltipText: usage.barTooltip
-    active: root.alarming
+    active: false
     horizontalMargin: 10
     hasVisualContent: true
     fixedWidth: barSlot.width + Style.space(16)
@@ -153,7 +153,7 @@ Panel {
         anchors.fill: barIcon
         source: barIcon
         colorization: 1.0
-        colorizationColor: button.active ? button.activeColor : button.foreground
+        colorizationColor: button.foreground
       }
 
       Column {
@@ -433,7 +433,7 @@ Panel {
   component LimitRow: Column {
     id: limitRow
     property var window: null
-    readonly property bool alarming: window && window.usedPercent >= 90
+    readonly property bool alarming: false
 
     spacing: Style.space(6)
 
@@ -457,7 +457,7 @@ Panel {
       Text {
         id: limitValue
         text: limitRow.window ? Math.round(limitRow.window.usedPercent) + "%" : "—"
-        color: limitRow.alarming ? root.urgent : root.foreground
+        color: root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
         anchors.right: parent.right
@@ -468,7 +468,7 @@ Panel {
     Meter {
       width: parent.width
       value: limitRow.window ? limitRow.window.usedPercent / 100 : -1
-      alarming: limitRow.alarming
+      alarming: false
     }
 
     Text {
@@ -508,7 +508,7 @@ Panel {
       height: usageTrack.height
       radius: usageTrack.radius
       width: usageTrack.width * root.clamp(usageBar.remaining, 0, 1)
-      color: button.active ? button.activeColor : button.foreground
+      color: button.foreground
     }
   }
 
@@ -533,7 +533,7 @@ Panel {
       height: meterTrack.height
       radius: meterTrack.radius
       width: meterTrack.width * root.clamp(meter.value, 0, 1)
-      color: meter.alarming ? root.urgent : root.foreground
+      color: root.foreground
 
       Behavior on width {
         NumberAnimation { duration: 160; easing.type: Easing.OutCubic }

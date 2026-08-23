@@ -24,11 +24,7 @@ Item {
     return Model.providersFromSnapshot(snapshot, enabledIds, Providers.catalog())
   }
   readonly property var headline: Model.barHeadline(providers)
-  readonly property bool alarming: {
-    for (var i = 0; i < providers.length; i++)
-      if (providers[i] && providers[i].alarming) return true
-    return false
-  }
+  readonly property bool alarming: false
   readonly property bool busy: dashboardProcess.running
   function barLabelFor(selectedId) {
     return Model.barText(providers, busy && !hasSnapshot, selectedId)
@@ -74,6 +70,7 @@ Item {
     lastError = Model.parseError(text, exitCode)
     missingCli = exitCode === 2
     pendingOnly = ""
+    if (hasSnapshot) return
     dataRevision++
   }
 

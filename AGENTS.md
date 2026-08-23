@@ -38,6 +38,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Plan labels: Codex `prolite` is Pro 5x, `pro` is Pro 20x. Kimi billed tier is `/coding/v1/me` `user_level_name` (Allegretto, not `membership.level`). Notion billed tier is space `subscription_tier`. Grok billed tier is `/v1/settings` `subscription_tier_display` when present, otherwise `accounts.x.ai` `xSubscriptionType` (Premium → X Premium). Do not invent Free.
 - The bar shows the selected provider icon plus two remaining meters: weekly on top, session underneath. Do not put the provider name or percent text in the bar slot.
 - Tint provider SVGs with `MultiEffect` to the bar foreground, like symbolic tray icons. Keep the icon and the two bars the same height (`Style.bar.iconCanvas`) and vertically centered together.
+- Never paint usage meters or the bar button in urgent red. A failed refresh must keep the last good snapshot instead of clearing the bars.
 - Update age lives under the selected provider, above Refresh. The Refresh button fetches only that provider and merges it into the existing snapshot.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list.
 - Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.

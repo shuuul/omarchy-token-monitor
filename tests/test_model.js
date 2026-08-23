@@ -89,7 +89,7 @@ assert.strictEqual(codex.paceSummary.includes("deficit"), true)
 assert.strictEqual(codex.alarming, false)
 
 const cursor = rows.find((row) => row.id === "cursor")
-assert.strictEqual(cursor.alarming, true)
+assert.strictEqual(cursor.alarming, false)
 assert.strictEqual(cursor.binding.usedPercent, 91)
 
 const kimi = rows.find((row) => row.id === "kimi")

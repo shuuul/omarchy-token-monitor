@@ -276,9 +276,7 @@ function displayProvider(row, descriptor) {
   display.paceSummary = firstPaceSummary(row.pace)
   display.error = errorText(row.error)
   display.updatedAt = String(usage.updatedAt || row.updatedAt || "")
-  display.alarming = (!!display.binding && display.binding.usedPercent >= 90)
-    || display.statusLevel === "critical"
-    || display.error !== ""
+  display.alarming = false
   return display
 }
 
