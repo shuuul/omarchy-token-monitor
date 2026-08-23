@@ -400,6 +400,7 @@ function prettyPlanPart(providerId, raw) {
   }
   var mapped = maps[id] && maps[id][key]
   if (mapped) return mapped
+  if (value.indexOf(".") >= 0) return value
   if (value.indexOf("_") >= 0 || value === value.toLowerCase()) {
     return value.split(/[_\s]+/).map(function(part) {
       return part ? part.charAt(0).toUpperCase() + part.slice(1) : ""
