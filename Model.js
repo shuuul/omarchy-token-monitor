@@ -357,7 +357,7 @@ function resetRemainingMs(resetAt, nowMs) {
   return ms - now
 }
 
-function prettyPlan(providerId, raw) {
+function prettyPlanPart(providerId, raw) {
   var value = String(raw || "").trim()
   if (value === "") return ""
   var id = String(providerId || "")
@@ -406,6 +406,16 @@ function prettyPlan(providerId, raw) {
     }).join(" ")
   }
   return value
+}
+
+function prettyPlan(providerId, raw) {
+  var value = String(raw || "").trim()
+  if (value === "") return ""
+  return value.split(" · ").map(function(part) {
+    return part.split(" + ").map(function(item) {
+      return prettyPlanPart(providerId, item)
+    }).join(" + ")
+  }).join(" · ")
 }
 
 function heroMeta(provider) {
