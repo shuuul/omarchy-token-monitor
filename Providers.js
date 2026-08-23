@@ -6,14 +6,14 @@
 // as Droid.
 
 var SUPPORTED = [
-  { id: "amp", name: "Amp", monogram: "A" },
-  { id: "codex", name: "Codex", monogram: "C" },
-  { id: "kimi", name: "Kimi Code", monogram: "K" },
-  { id: "cursor", name: "Cursor", monogram: "Cu" },
-  { id: "grok", name: "Grok", monogram: "G" },
-  { id: "notion", name: "Notion AI", monogram: "N" },
-  { id: "zed", name: "Zed", monogram: "Z" },
-  { id: "factory", name: "Droid", monogram: "D" }
+  { id: "amp", name: "Amp", monogram: "A", dashboardUrl: "https://ampcode.com/settings/usage" },
+  { id: "codex", name: "Codex", monogram: "C", dashboardUrl: "https://chatgpt.com/codex/settings/usage" },
+  { id: "kimi", name: "Kimi Code", monogram: "K", dashboardUrl: "https://www.kimi.com/code/console" },
+  { id: "cursor", name: "Cursor", monogram: "Cu", dashboardUrl: "https://cursor.com/dashboard?tab=usage" },
+  { id: "grok", name: "Grok", monogram: "G", dashboardUrl: "https://grok.com/?_s=usage" },
+  { id: "notion", name: "Notion AI", monogram: "N", dashboardUrl: "https://app.notion.com/" },
+  { id: "zed", name: "Zed", monogram: "Z", dashboardUrl: "" },
+  { id: "factory", name: "Droid", monogram: "D", dashboardUrl: "https://app.factory.ai/settings/billing" }
 ]
 
 var DEFAULT_PROVIDERS = {
@@ -57,6 +57,18 @@ function descriptor(id) {
 function displayName(id) {
   var item = descriptor(id)
   return item ? item.name : String(id || "")
+}
+
+function dashboardUrl(id, provider) {
+  var item = descriptor(id)
+  var url = item && item.dashboardUrl ? String(item.dashboardUrl) : ""
+  if (String(id || "") !== "kimi") return url
+  var hint = ""
+  if (provider && typeof provider === "object") {
+    hint = String(provider.plan || "") + " " + String(provider.source || "")
+  }
+  if (hint.indexOf("kimi.ai") >= 0) return "https://www.kimi.ai/code/console"
+  return url
 }
 
 function monogram(id) {

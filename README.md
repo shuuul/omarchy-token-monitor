@@ -52,7 +52,8 @@ omarchy plugin remove shuuul.token-monitor
 
 The bar shows the selected provider icon and two remaining meters: weekly on
 top, session underneath. Left click opens the panel. Right click refreshes the
-selected provider. Middle click moves to the next one.
+selected provider. Middle click moves to the next one. Usage dashboard opens
+the provider site CodexBar uses for leftover quota. Zed has no dashboard page.
 
 ## Why collect.py exists
 

@@ -51,6 +51,15 @@ grep -Fq 'Style.bar.iconCanvas' Panel.qml
 grep -Fq 'anchors.verticalCenter: parent.verticalCenter' Panel.qml
 grep -Fq 'formatUpdatedAt' Panel.qml
 grep -Fq 'Refresh " + root.provider.name' Panel.qml
+grep -Fq 'text: "Usage dashboard"' Panel.qml
+grep -Fq 'Qt.openUrlExternally' Panel.qml
+grep -Fq 'dashboardUrl: "https://ampcode.com/settings/usage"' Providers.js
+grep -Fq 'dashboardUrl: "https://chatgpt.com/codex/settings/usage"' Providers.js
+grep -Fq 'dashboardUrl: "https://www.kimi.com/code/console"' Providers.js
+grep -Fq 'dashboardUrl: "https://cursor.com/dashboard?tab=usage"' Providers.js
+grep -Fq 'dashboardUrl: "https://grok.com/?_s=usage"' Providers.js
+grep -Fq 'dashboardUrl: "https://app.notion.com/"' Providers.js
+grep -Fq 'dashboardUrl: "https://app.factory.ai/settings/billing"' Providers.js
 grep -Fq 'text: "Extra usage"' Panel.qml
 grep -Fq 'tooltipText: "Settings"' Panel.qml
 grep -Fq 'Refresh interval' Panel.qml

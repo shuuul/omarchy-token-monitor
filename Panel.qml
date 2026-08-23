@@ -832,6 +832,21 @@ Panel {
 
           Button {
             width: parent.width
+            visible: !root.settingsOpen && !!root.provider && Providers.dashboardUrl(root.provider.id, root.provider) !== ""
+            text: "Usage dashboard"
+            bordered: true
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.body
+            verticalPadding: Style.spacing.controlPaddingY
+            onClicked: {
+              var url = Providers.dashboardUrl(root.provider.id, root.provider)
+              if (url) Qt.openUrlExternally(url)
+            }
+          }
+
+          Button {
+            width: parent.width
             visible: !root.settingsOpen
             text: usage.busy ? "Refreshing…" : (root.provider ? "Refresh " + root.provider.name : "Refresh")
             enabled: !usage.busy && !!root.provider
