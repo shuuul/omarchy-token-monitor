@@ -23,6 +23,20 @@ grep -Fq '{ id: "notion", name: "Notion AI"' Providers.js
 grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 [[ "$(grep -c '{ id: "' Providers.js)" -eq 7 ]]
 
+# Provider marks come from CodexBar ProviderIcon-*.svg, tinted with currentColor.
+for id in amp codex kimi cursor grok notion zed; do
+  grep -Fq 'currentColor' "assets/${id}.svg"
+done
+# Distinct official marks, not the old monogram placeholders.
+! grep -Fq 'M12 3 4 21h3.1l1.5-3.4h6.8L16.9 21H20L12 3zm0 6.2' assets/amp.svg
+grep -Fq 'M13.9197 13.61L17.3816 26.566L14.242 27.4049' assets/amp.svg
+grep -Fq 'M83.7733 42.8087' assets/codex.svg
+grep -Fq 'M84.0704 28.9353L51.9066 10.4454' assets/cursor.svg
+grep -Fq 'M9.27 15.29l7.978-5.897' assets/grok.svg
+grep -Fq 'M21.7202 0.939941' assets/kimi.svg
+grep -Fq 'M15.257.055l-13.31.98' assets/notion.svg
+grep -Fq 'M2.25 1.5a.75.75 0 0 0-.75.75v16.5H0V2.25' assets/zed.svg
+
 # Panel wiring follows the Omarchy agents / clock contract.
 grep -Fq 'text: modelData.name' Panel.qml
 grep -Fq 'longestBarLabel' Panel.qml

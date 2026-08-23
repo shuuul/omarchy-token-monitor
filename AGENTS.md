@@ -33,6 +33,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Use Conventional Commits: `<type>(<scope>): <summary>`.
 - Do not commit secrets, CodexBar config, cookies, or API keys.
 - Provider IDs must match CodexBar exactly: `amp`, `codex`, `kimi`, `cursor`, `grok`, `notion`, `zed`.
+- Provider icons in `assets/<id>.svg` must come from CodexBar `Sources/CodexBar/Resources/ProviderIcon-<id>.svg`, with fills rewritten to `currentColor`. Do not invent monograms.
 - Kimi has two regions. Check both: `kimi.com` (China) and `kimi.ai` (international). Pair tokens/cookies only with the matching host.
 - Plan labels: Codex `prolite` is Pro 5x, `pro` is Pro 20x. Kimi billed tier is `/coding/v1/me` `user_level_name` (Allegretto, not `membership.level`). Notion billed tier is space `subscription_tier`. Grok billed tier is `/v1/settings` `subscription_tier_display` when present, otherwise `accounts.x.ai` `xSubscriptionType` (Premium → X Premium). Do not invent Free.
 - The bar icon and label follow the panel's selected provider. Without a selection they still fall back to the fullest usage window.
