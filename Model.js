@@ -364,15 +364,24 @@ function prettyPlanPart(providerId, raw) {
   var key = value.toLowerCase().replace(/[\s-]+/g, "_")
   var maps = {
     codex: {
+      guest: "Guest",
       free: "Free",
-      plus: "Plus",
       go: "Go",
-      pro: "Pro",
-      prolite: "Pro",
-      pro_lite: "Pro",
+      plus: "Plus",
+      plus_plan: "Plus",
+      chatgpt_plus: "Plus",
+      pro: "Pro 20x",
+      codex_pro: "Pro 20x",
+      prolite: "Pro 5x",
+      pro_lite: "Pro 5x",
+      prolite_plan: "Pro 5x",
+      codex_pro_lite: "Pro 5x",
+      free_workspace: "Free Workspace",
       team: "Team",
       business: "Business",
-      enterprise: "Enterprise"
+      education: "Education",
+      enterprise: "Enterprise",
+      edu: "Edu"
     },
     cursor: {
       hobby: "Hobby",
@@ -385,10 +394,18 @@ function prettyPlanPart(providerId, raw) {
     },
     kimi: {
       level_free: "Free",
-      level_basic: "Andante",
-      level_intermediate: "Moderato",
-      level_advanced: "Allegretto",
-      level_professional: "Presto"
+      adagio: "Adagio",
+      andante: "Andante",
+      moderato: "Moderato",
+      allegretto: "Allegretto",
+      allegro: "Allegro",
+      vivace: "Vivace"
+    },
+    notion: {
+      free: "Free",
+      plus: "Plus",
+      business: "Business",
+      enterprise: "Enterprise"
     },
     zed: {
       zed_free: "Free",

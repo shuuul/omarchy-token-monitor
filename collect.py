@@ -323,6 +323,42 @@ def fetch_cursor(jars: dict) -> dict:
     return row("cursor", source="chrome", usage=usage)
 
 
+def unwrap_record(raw):
+    if not isinstance(raw, dict):
+        return {}
+    value = raw.get("value") if "value" in raw else raw
+    if isinstance(value, dict) and isinstance(value.get("value"), dict):
+        return value["value"]
+    return value if isinstance(value, dict) else {}
+
+
+def notion_account(spaces: dict) -> tuple[str | None, str | None, str | None, str | None]:
+    rec = next(iter(spaces.values()), None)
+    if not isinstance(rec, dict):
+        return None, None, None, None
+    email = None
+    users = rec.get("notion_user") or {}
+    first_user = next(iter(users.values()), None)
+    user = unwrap_record(first_user)
+    if user:
+        email = user.get("email")
+    space_map = rec.get("space") or {}
+    chosen = None
+    for raw in space_map.values():
+        space = unwrap_record(raw)
+        if not space:
+            continue
+        if chosen is None:
+            chosen = space
+        tier = str(space.get("subscription_tier") or "").lower()
+        if tier in ("business", "enterprise"):
+            chosen = space
+            break
+    if not chosen:
+        return None, email, None, None
+    return chosen.get("id"), email, chosen.get("subscription_tier"), chosen.get("name")
+
+
 def fetch_notion(jars: dict) -> dict:
     header = cookie_header(jars, [("token_v2", [".app.notion.com", "app.notion.com", ".notion.so"])])
     if not header:
@@ -338,9 +374,9 @@ def fetch_notion(jars: dict) -> dict:
     if status != 200:
         return row("notion", source="chrome", error=f"Notion getSpaces returned {status}.")
     spaces = json.loads(body)
-    rec = next(iter(spaces.values()))
-    space_map = rec.get("space") or {}
-    space_id = next(iter(space_map))
+    space_id, email, tier, workspace = notion_account(spaces)
+    if not space_id:
+        return row("notion", source="chrome", error="No Notion workspace found.")
     status, body, _ = http(
         "https://app.notion.com/api/v3/getCreditRateLimitStatus",
         method="POST",
@@ -352,10 +388,6 @@ def fetch_notion(jars: dict) -> dict:
     data = json.loads(body)
     rolling = data.get("window") or {}
     monthly = data.get("billingPeriodWindow") or {}
-    reset_6h = None
-    if rolling.get("used") is not None and rolling.get("limit"):
-        # Notion does not always send resetsInSeconds; leave blank.
-        pass
     monthly_reset = iso_from_unix((monthly.get("periodEndMs") or 0) / 1000) if monthly.get("periodEndMs") else None
 
     def pct(block: dict) -> float | None:
@@ -365,9 +397,17 @@ def fetch_notion(jars: dict) -> dict:
             return None
         return float(used) / float(limit) * 100.0
 
+    plan = str(tier or "").strip()
     usage = {
-        "loginMethod": "Notion AI",
-        "identity": {"providerID": "notion", "loginMethod": "Notion AI"},
+        "accountEmail": email,
+        "loginMethod": plan or "Notion AI",
+        "identity": {
+            "providerID": "notion",
+            "accountEmail": email,
+            "accountOrganization": workspace,
+            "plan": plan,
+            "loginMethod": plan or "Notion AI",
+        },
         "primary": window(pct(rolling), 360, None, "6-hour"),
         "secondary": window(pct(monthly), None, monthly_reset, "Monthly"),
         "updatedAt": iso_now(),
@@ -514,6 +554,7 @@ KIMI_REGIONS = (
         "name": "kimi.com",
         "oauth": "https://auth.kimi.com/api/oauth/token",
         "api": "https://api.kimi.com/coding/v1/usages",
+        "me": "https://api.kimi.com/coding/v1/me",
         "cookie_hosts": ["www.kimi.com", ".kimi.com", "kimi.com", ".www.kimi.com"],
         "cred_names": ("kimi-code.json",),
     },
@@ -522,6 +563,7 @@ KIMI_REGIONS = (
         "name": "kimi.ai",
         "oauth": "https://auth.kimi.ai/api/oauth/token",
         "api": "https://api.kimi.ai/coding/v1/usages",
+        "me": "https://api.kimi.ai/coding/v1/me",
         "cookie_hosts": ["www.kimi.ai", ".kimi.ai", "kimi.ai", ".www.kimi.ai"],
         "cred_names": (),
     },
@@ -578,6 +620,25 @@ def refresh_kimi_creds(creds: dict, oauth_url: str) -> dict | None:
     }
 
 
+def kimi_plan_name(token: str, region: dict, usage_data: dict) -> str:
+    """Prefer /me user_level_name. membership.level is a coarse bucket, not the billed tier."""
+    me_url = region.get("me")
+    if me_url:
+        status, body, _ = http(
+            me_url,
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        )
+        if status == 200:
+            try:
+                me = json.loads(body)
+            except json.JSONDecodeError:
+                me = {}
+            name = str(me.get("user_level_name") or "").strip()
+            if name:
+                return name
+    return str(((usage_data.get("user") or {}).get("membership") or {}).get("level") or "")
+
+
 def kimi_usage_from_token(token: str, source: str, region: dict) -> dict:
     status, body, _ = http(
         region["api"],
@@ -601,7 +662,7 @@ def kimi_usage_from_token(token: str, source: str, region: dict) -> dict:
         return window(used / limit * 100.0, minutes, block.get("resetTime"), label)
 
     site = region["name"]
-    membership = ((data.get("user") or {}).get("membership") or {}).get("level") or ""
+    membership = kimi_plan_name(token, region, data)
     usage = {
         "loginMethod": membership or site,
         "identity": {

@@ -34,6 +34,7 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Do not commit secrets, CodexBar config, cookies, or API keys.
 - Provider IDs must match CodexBar exactly: `amp`, `codex`, `kimi`, `cursor`, `grok`, `notion`, `zed`.
 - Kimi has two regions. Check both: `kimi.com` (China) and `kimi.ai` (international). Pair tokens/cookies only with the matching host.
+- Plan labels: Codex `prolite` is Pro 5x, `pro` is Pro 20x. Kimi billed tier is `/coding/v1/me` `user_level_name` (Allegretto, not `membership.level`). Notion billed tier is space `subscription_tier`.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list.
 - Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.
 - `collect.py` must inherit the Omarchy shell environment. Do not rewrite `HOME` or `PATH` in the Process argv; an empty `HOME` makes Amp look like `No such file` and every cookie provider look signed out.

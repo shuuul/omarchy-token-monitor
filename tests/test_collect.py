@@ -31,17 +31,45 @@ merged = collect.merge_kimi_rows([
     {
         "source": "cli",
         "usage": {
-            "identity": {"plan": "LEVEL_INTERMEDIATE", "accountOrganization": "kimi.com"},
+            "identity": {"plan": "Allegretto", "accountOrganization": "kimi.com"},
             "primary": {"usedPercent": 0, "label": "5-hour · kimi.com"},
         },
     }
 ])
-assert "LEVEL_INTERMEDIATE" in merged["usage"]["loginMethod"]
+assert "Allegretto" in merged["usage"]["loginMethod"]
 assert "kimi.com" in merged["usage"]["loginMethod"]
+spaces = {
+    "user-1": {
+        "notion_user": {"user-1": {"value": {"email": "user@example.com"}}},
+        "space": {
+            "space-1": {
+                "spaceId": "space-1",
+                "value": {
+                    "id": "space-1",
+                    "name": "shuuul",
+                    "plan_type": "team",
+                    "subscription_tier": "business",
+                },
+            }
+        },
+    }
+}
+space_id, email, tier, name = collect.notion_account(spaces)
+assert space_id == "space-1"
+assert email == "user@example.com"
+assert tier == "business"
+assert name == "shuuul"
+assert collect.kimi_plan_name(
+    "token",
+    {"me": None},
+    {"user": {"membership": {"level": "LEVEL_INTERMEDIATE"}}},
+) == "LEVEL_INTERMEDIATE"
 source = (ROOT / "collect.py").read_text()
 assert "WHERE name IN" in source
 assert "auth.kimi.com/api/oauth/token" in source
 assert "auth.kimi.ai/api/oauth/token" in source
 assert "api.kimi.ai/coding/v1/usages" in source
+assert "api.kimi.com/coding/v1/me" in source
+assert "api.kimi.ai/coding/v1/me" in source
 assert "zed-github-account" in source
 print("collect tests passed")
