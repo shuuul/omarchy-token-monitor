@@ -57,13 +57,14 @@ top, session underneath. Left click opens the panel. Right click refreshes the
 selected provider. Middle click moves to the next one. Usage dashboard opens
 the provider site CodexBar uses for leftover quota. Zed has no dashboard page.
 
-## Why collect.py exists
+## Why the Python collector exists
 
 Quickshell QML cannot decrypt Chrome cookies, talk to Secret Service, or keep
-OAuth refresh writes atomic. Those steps live in `collect.py`. The panel only
-renders JSON that script prints.
+OAuth refresh writes atomic. Those steps live in the `collector/` package. The
+root `collect.py` is the stable executable entry point; the panel only renders
+the JSON it prints.
 
-`collect.py` is required because:
+The Python collector is required because:
 
 - Chrome/Chromium cookies are an SQLite database encrypted with a key from
   `secret-tool`. QML has no AES or libsecret bindings.
@@ -127,7 +128,7 @@ make test
 make validate
 ```
 
-After a QML or `collect.py` change, restart the shell before checking the bar:
+After a QML or Python collector change, restart the shell before checking the bar:
 
 ```bash
 omarchy restart shell

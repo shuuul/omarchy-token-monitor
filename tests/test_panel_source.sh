@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Vendor HTTP stays in collect.py. QML only renders.
+# Vendor HTTP stays in the Python collector. QML only renders.
 grep -Fq 'collect.py' Model.js
 grep -Fq '/usr/bin/python3' Model.js
 ! grep -Fq 'PATH=' Model.js
 grep -Fq 'Model.collectCommand({' Service.qml
 ! grep -Eq 'ampcode.com|chatgpt.com|api.kimi.com|cursor.com|cli-chat-proxy.grok.com|app.notion.com|cloud.zed.dev' \
   Model.js Providers.js Service.qml Panel.qml
-grep -Fq 'ampcode.com' collect.py
-grep -Fq 'auth.kimi.com/api/oauth/token' collect.py
-grep -Fq 'auth.kimi.ai/api/oauth/token' collect.py
-grep -Fq 'zed-github-account' collect.py
+grep -Fq 'ampcode.com' collector/providers/amp.py
+grep -Fq 'auth.kimi.com/api/oauth/token' collector/providers/kimi.py
+grep -Fq 'auth.kimi.ai/api/oauth/token' collector/providers/kimi.py
+grep -Fq 'zed-github-account' collector/providers/zed.py
 
 # The supported set is closed and uses CodexBar IDs exactly.
 grep -Fq '{ id: "amp", name: "Amp"' Providers.js

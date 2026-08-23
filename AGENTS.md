@@ -14,7 +14,7 @@ Quickshell caches compiled QML. A file save or `rescanPlugins` is **not** enough
 for `Panel.qml` / `Service.qml` edits. The bar will keep showing the old layout
 (for example seven monogram letters) until the shell process restarts.
 
-After any QML, `collect.py`, or `manifest.json` change:
+After any QML, Python collector, or `manifest.json` change:
 
 1. `make test`
 2. `omarchy restart shell`
@@ -42,8 +42,8 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - Update age lives under the selected provider, above Refresh. The Usage dashboard button opens that provider's CodexBar `dashboardURL` in the browser. Zed has none, so hide the button. The Refresh button fetches only that provider and merges it into the existing snapshot.
 - Panel settings live behind the hero gear: refresh interval (default 5 minutes), refresh on open (default off), show remaining vs used (default remaining), hide email (default off), Chrome/Chromium cookies, and per-provider enablement. Persist with `bar.shell.updateEntryInline`. Settings rows can be dragged to set `providerOrder`; the main provider switch uses that same order. Opening the panel fetches every provider only when refresh on open is enabled. Remember `selectedProviderId` so opening the panel does not jump to the most-used headline. The account email belongs only in the hero line, not under the provider switch.
 - Do not add Claude, OpenAI admin, xAI, or any other CodexBar provider unless the user expands the allow-list. Factory/Droid is already on the allow-list.
-- Provider HTTP and Chrome cookie import live in `collect.py`. Do not print cookies or tokens.
-- `collect.py` must inherit the Omarchy shell environment. Do not rewrite `HOME` or `PATH` in the Process argv; an empty `HOME` makes Amp look like `No such file` and every cookie provider look signed out.
+- Provider HTTP and Chrome cookie import live in `collector/`; root `collect.py` is only the stable executable entry point. Do not print cookies or tokens.
+- The Python collector must inherit the Omarchy shell environment. Do not rewrite `HOME` or `PATH` in the Process argv; an empty `HOME` makes Amp look like `No such file` and every cookie provider look signed out.
 - QML colors come from `qs.Commons.Color` and `Style`. No hard-coded hex.
 - Nested `Component {}` blocks must not reference `root.`; `BarIconButton` and `PanelHero` also use that name.
 
@@ -53,7 +53,8 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 flowchart TD
   Bar["Panel.qml bar button"] --> Service["Service.qml"]
   Service --> CLI["python3 collect.py"]
-  CLI --> Snapshot["usage JSON array"]
+  CLI --> Collector["collector/ package"]
+  Collector --> Snapshot["usage JSON array"]
   Snapshot --> Model["Model.js"]
   Model --> Panel["Panel.qml limits / credits"]
   Providers["Providers.js allow-list"] --> Model

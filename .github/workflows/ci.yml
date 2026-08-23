@@ -24,3 +24,5 @@ jobs:
           python3 -c 'import json; json.load(open("manifest.json"))'
           test -f Panel.qml
           test -f Service.qml
+          test -f collect.py
+          test -f collector/main.py
