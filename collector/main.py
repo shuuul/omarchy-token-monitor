@@ -56,7 +56,7 @@ def collect(settings: dict | None = None, argv: list[str] | None = None) -> list
         "cursor": lambda: fetch_cursor(jars),
         "grok": lambda: fetch_grok(jars),
         "notion": lambda: fetch_notion(jars),
-        "zed": fetch_zed,
+        "zed": lambda: fetch_zed(jars),
         "factory": lambda: fetch_factory(jars),
     }
     out = []
