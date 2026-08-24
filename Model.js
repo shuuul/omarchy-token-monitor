@@ -233,6 +233,7 @@ function titleCaseLabel(label) {
 function windowTitle(label, kind, minutes) {
   var text = String(label || "").toLowerCase()
   var kindText = String(kind || "").toLowerCase()
+  if (kindText === "cursor-grok-bot" || text === "grok bot") return "Grok Bot"
   if (text.indexOf("core") >= 0) {
     if (text.indexOf("5h") >= 0 || text.indexOf("5-hour") >= 0 || text.indexOf("five-hour") >= 0 || minutes === 300)
       return "Core 5h"

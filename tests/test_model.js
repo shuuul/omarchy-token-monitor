@@ -143,7 +143,8 @@ const cursorNamed = {
   windows: [
     { title: "Plan", usedPercent: 8.6 },
     { title: "Cursor Models", usedPercent: 9.73 },
-    { title: "Third-Party", usedPercent: 0.39 }
+    { title: "Third-Party", usedPercent: 0.39 },
+    { title: "Grok Bot", usedPercent: 13.09 }
   ]
 }
 const cursorNamedIcon = model.iconWindows(cursorNamed)
@@ -151,6 +152,20 @@ assert.strictEqual(Math.round(cursorNamedIcon.weeklyRemaining), 90)
 assert.strictEqual(Math.round(cursorNamedIcon.sessionRemaining), 100)
 assert.strictEqual(model.windowTitle("Cursor models", "", null), "Cursor Models")
 assert.strictEqual(model.windowTitle("Third-party", "", null), "Third-Party")
+assert.strictEqual(model.windowTitle("Grok Bot", "cursor-grok-bot", 10080), "Grok Bot")
+const cursorWithGrok = model.displayProvider({
+  provider: "cursor",
+  usage: {
+    extraRateWindows: [{
+      id: "cursor-grok-bot",
+      title: "Grok Bot",
+      window: { usedPercent: 13.09, windowMinutes: 10080, resetsAt: "2026-08-31T02:28:01.719Z" }
+    }]
+  }
+}, providers.descriptor("cursor"))
+assert.strictEqual(cursorWithGrok.windows.length, 1)
+assert.strictEqual(cursorWithGrok.windows[0].title, "Grok Bot")
+assert.strictEqual(cursorWithGrok.windows[0].usedPercent, 13.09)
 const grokRow = {
   windows: [{ title: "Weekly", usedPercent: 92 }]
 }

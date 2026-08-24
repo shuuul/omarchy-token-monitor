@@ -12,6 +12,7 @@ assert "api.kimi.com/coding/v1/me" in source
 assert "api.kimi.ai/coding/v1/me" in source
 assert "cli-chat-proxy.grok.com/v1/settings" in source
 assert "cli-chat-proxy.grok.com/v1/billing?format=credits" in source
+assert "cursor.com/api/dashboard/get-sand-usage-status" in source
 assert "GROK_OAUTH_TOKEN" in source
 assert '"Weekly"' in source
 assert "Codex Spark" in source

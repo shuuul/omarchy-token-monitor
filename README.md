@@ -61,7 +61,8 @@ omarchy plugin remove shuuul.token-monitor
 The bar shows the selected provider icon and two remaining meters: weekly on
 top, session underneath. Left click opens the panel. Right click refreshes the
 selected provider. Middle click moves to the next one. Usage dashboard opens
-the provider site CodexBar uses for leftover quota. Zed has no dashboard page.
+the provider site CodexBar uses for leftover quota. Cursor's panel also shows
+its included Grok Bot weekly allowance. Zed has no dashboard page.
 
 ## Why the Python collector exists
 
