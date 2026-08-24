@@ -192,13 +192,22 @@ function parseSnapshot(text) {
   return null
 }
 
+function stripControlChars(text) {
+  return String(text || "")
+    .replace(/\u001b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "")
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "")
+}
+
 function parseError(text, exitCode) {
   var data = lastJsonValue(text)
   if (data && !Array.isArray(data) && data.error) return errorText(data.error)
-  var trimmed = String(text || "").trim()
+  var trimmed = stripControlChars(text).trim()
   if (trimmed !== "") {
-    var lines = trimmed.split("\n")
-    return lines[lines.length - 1]
+    var lines = trimmed.split("\n").map(function(line) { return line.trim() }).filter(Boolean)
+    for (var i = lines.length - 1; i >= 0; i--) {
+      if (/[A-Za-z]/.test(lines[i])) return lines[i]
+    }
+    return lines[lines.length - 1] || ""
   }
   if (exitCode === 2) return "python3 could not run collect.py"
   if (exitCode === 139) return "collect.py crashed"
@@ -214,12 +223,14 @@ function asNumber(value) {
 
 function errorText(value) {
   if (value === undefined || value === null || value === false) return ""
-  if (typeof value === "string") return value
-  if (typeof value === "object") {
-    if (value.message) return String(value.message)
-    if (value.error) return errorText(value.error)
-  }
-  return String(value)
+  var text = ""
+  if (typeof value === "string") text = value
+  else if (typeof value === "object") {
+    if (value.message) text = String(value.message)
+    else if (value.error) return errorText(value.error)
+    else text = String(value)
+  } else text = String(value)
+  return stripControlChars(text).trim()
 }
 
 function titleCaseLabel(label) {

@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collector.cookies import cookie_value
-from collector.http import _read_bounded, http
+from collector.http import ALLOWED_HTTPS_HOSTS, _read_bounded, http
 from collector.security import MAX_CREDENTIAL_BYTES, bounded_secret, run_bounded
 
 
@@ -22,6 +22,7 @@ try:
     raise AssertionError("unlisted provider destination was accepted")
 except ValueError:
     pass
+assert "ampcode.com" in ALLOWED_HTTPS_HOSTS
 
 assert bounded_secret("x" * MAX_CREDENTIAL_BYTES) == "x" * MAX_CREDENTIAL_BYTES
 assert bounded_secret("x" * (MAX_CREDENTIAL_BYTES + 1)) is None

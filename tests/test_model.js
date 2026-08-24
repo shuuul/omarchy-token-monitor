@@ -19,6 +19,14 @@ assert.deepStrictEqual(
   ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py", "grok"],
 )
 assert.strictEqual(model.appendBounded("a", "b"), "ab")
+assert.strictEqual(
+  model.errorText("amp usage failed: Error: Unexpected error inside Amp CLI.\n\u001b[=0u\u001b[<u\u001b[?25h"),
+  "amp usage failed: Error: Unexpected error inside Amp CLI.",
+)
+assert.strictEqual(
+  model.parseError("Error: Unexpected error inside Amp CLI.\n\u001b[=0u\u001b[<u\u001b[?25h", 1),
+  "Error: Unexpected error inside Amp CLI.",
+)
 assert.strictEqual(model.appendBounded("x".repeat(65536), "overflow").length, 65536)
 assert.deepStrictEqual(
   model.mergeProviderRows(

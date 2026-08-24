@@ -14,6 +14,7 @@ CTX = ssl.create_default_context()
 
 ALLOWED_HTTPS_HOSTS = frozenset({
     "accounts.x.ai",
+    "ampcode.com",
     "api.factory.ai",
     "api.kimi.ai",
     "api.kimi.com",

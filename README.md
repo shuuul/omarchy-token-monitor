@@ -79,7 +79,7 @@ The Python collector is required because:
   that item up and never prints the secret.
 - Kimi tokens expire in minutes. The collector refreshes them and writes the
   file back `0600`.
-- Amp usage is a local CLI (`amp usage`). Codex is `~/.codex/auth.json`.
+- Amp usage is `amp usage`, then `AMP_API_KEY` / `~/.local/share/amp/secrets.json`, then Chrome cookies. Codex is `~/.codex/auth.json`.
 - The process must inherit the Omarchy shell environment. An empty `HOME`
   makes Amp look like `No such file` and every cookie provider look signed out.
 
@@ -93,7 +93,7 @@ another host. It never sends one provider's credentials to another provider.
 
 | Credential source | Sent only to |
 | --- | --- |
-| Amp `session` cookie | Not sent; its presence only selects the local sign-in message |
+| Amp `AMP_API_KEY`, `~/.local/share/amp/secrets.json`, or `session` cookie | `ampcode.com` |
 | Codex OAuth access token and account ID | `chatgpt.com` |
 | Kimi refresh/access token or `kimi-auth` cookie | Matching region only: `auth.kimi.com` / `api.kimi.com`, or `auth.kimi.ai` / `api.kimi.ai` |
 | Cursor `WorkosCursorSessionToken` cookie | `cursor.com` |
@@ -116,7 +116,7 @@ and the JSON stream retained by QML is limited to 64 KiB.
 
 | Provider | CodexBar ID | How this panel reads it |
 | --- | --- | --- |
-| Amp | `amp` | `amp usage`, then Chrome cookies |
+| Amp | `amp` | `amp usage`, then `AMP_API_KEY` / `~/.local/share/amp/secrets.json`, then Chrome cookies |
 | Codex | `codex` | `~/.codex/auth.json` |
 | Kimi Code | `kimi` | `~/.kimi-code/credentials/` on kimi.com and kimi.ai |
 | Cursor | `cursor` | Chrome cookie `WorkosCursorSessionToken` |
