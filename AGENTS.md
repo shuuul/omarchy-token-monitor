@@ -47,6 +47,42 @@ Do not ask the user to verify a UI change until step 2 has run in this session.
 - QML colors come from `qs.Commons.Color` and `Style`. No hard-coded hex.
 - Nested `Component {}` blocks must not reference `root.`; `BarIconButton` and `PanelHero` also use that name.
 
+## Security boundaries — preserve these
+
+Provider responses, local auth files, keyring output, browser cookies, subprocess
+output, settings, and collector JSON are untrusted input. The limits in
+`collector/security.py`, `collector/http.py`, `collector/cookies.py`, `Model.js`,
+and `Service.qml` are product invariants, not optional hardening.
+
+- Use `read_bytes`, `read_text`, or `read_json` for auth/config files and
+  `bounded_secret` for tokens, cookie values, account IDs, and API keys. Do not
+  add unbounded `Path.read_*` calls for credentials. Kimi credential refreshes
+  must remain an atomic same-directory replace with directory mode `0700` and
+  file mode `0600`.
+- Run local commands with `run_bounded`, an argument array, an explicit timeout,
+  and an output cap. Do not use `shell=True`, unbounded `subprocess.run`, or hold
+  arbitrary command output in memory. Preserve the inherited shell environment;
+  do not synthesize or clear `HOME` or `PATH`.
+- Send provider requests only through `collector.http.http`. It enforces HTTPS,
+  an exact hostname allow-list, disabled redirects, bounded request headers and
+  bodies, and bounded responses. Every call must set a provider-appropriate
+  `max_bytes`. Adding a host requires explicit review and an update to
+  `ALLOWED_HTTPS_HOSTS`; never replace it with wildcard or suffix matching and
+  never enable authenticated redirects.
+- Read only the named cookies providers need. Keep the cookie database, row,
+  hostname, encrypted-value, decrypted-secret, and assembled-header limits.
+  Cookie domains may match only the approved domain itself or a dot-delimited
+  subdomain; substring checks such as `wanted in host` are forbidden.
+- Never print or return tokens, cookies, authorization headers, raw auth files,
+  or provider payloads. Provider-controlled display data must pass through
+  `row` / `bounded_value`, and final stdout must use `snapshot_json`. Preserve
+  the 64 KiB snapshot/settings boundary, collection/depth/text caps, bounded QML
+  stdout/stderr accumulation, and the last-good-snapshot behavior on failure.
+- Security boundary changes require focused coverage in `tests/test_security.py`
+  or the relevant provider test, followed by `make test`. Do not raise or remove
+  a limit merely to make a failing payload pass; confirm the smallest safe bound
+  from the provider contract.
+
 ## Architecture
 
 ```mermaid
