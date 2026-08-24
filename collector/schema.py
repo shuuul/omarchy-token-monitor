@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from collector.security import bounded_value
 
 def iso_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -32,4 +33,4 @@ def row(provider: str, *, source: str, usage: dict | None = None, credits: dict 
         out["pace"] = pace
     if error:
         out["error"] = {"message": error}
-    return out
+    return bounded_value(out)

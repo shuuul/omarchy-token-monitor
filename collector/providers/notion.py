@@ -5,6 +5,8 @@ from collector.cookies import cookie_header
 from collector.http import http
 from collector.schema import iso_from_unix, iso_now, row, window
 
+MAX_NOTION_RESPONSE_BYTES = 2 * 1024 * 1024
+
 def unwrap_record(raw):
     if not isinstance(raw, dict):
         return {}
@@ -52,7 +54,13 @@ def fetch_notion(jars: dict) -> dict:
         "Referer": "https://app.notion.com/",
         "Accept": "application/json",
     }
-    status, body, _ = http("https://app.notion.com/api/v3/getSpaces", method="POST", headers=headers, body=b"{}")
+    status, body, _ = http(
+        "https://app.notion.com/api/v3/getSpaces",
+        method="POST",
+        headers=headers,
+        body=b"{}",
+        max_bytes=MAX_NOTION_RESPONSE_BYTES,
+    )
     if status != 200:
         return row("notion", source="chrome", error=f"Notion getSpaces returned {status}.")
     spaces = json.loads(body)
@@ -64,6 +72,7 @@ def fetch_notion(jars: dict) -> dict:
         method="POST",
         headers=headers,
         body=json.dumps({"spaceId": space_id}).encode(),
+        max_bytes=MAX_NOTION_RESPONSE_BYTES,
     )
     if status != 200:
         return row("notion", source="chrome", error=f"Notion credit status returned {status}.")

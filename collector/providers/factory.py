@@ -6,13 +6,13 @@ import ctypes.util
 import json
 import os
 import re
-import subprocess
 import time
 import urllib.parse
 from datetime import datetime, timezone
 from collector.cookies import HOME, FACTORY_COOKIE_HOSTS, FACTORY_COOKIE_NAMES, cookie_header, cookie_value
 from collector.http import http
 from collector.schema import iso_from_unix, iso_now, row, window
+from collector.security import MAX_CREDENTIAL_BYTES, bounded_secret, read_text, run_bounded
 
 FACTORY_HEADERS = {
     "Accept": "application/json",
@@ -21,6 +21,7 @@ FACTORY_HEADERS = {
     "Referer": "https://app.factory.ai/",
     "x-factory-client": "web-app",
 }
+MAX_FACTORY_RESPONSE_BYTES = 1024 * 1024
 
 def factory_api_key_from_dotenv(text: str) -> str | None:
     for raw in text.splitlines():
@@ -43,13 +44,13 @@ def factory_api_key_from_dotenv(text: str) -> str | None:
 
 
 def factory_api_key() -> str | None:
-    env = str(os.environ.get("FACTORY_API_KEY") or "").strip()
+    env = bounded_secret(os.environ.get("FACTORY_API_KEY"))
     if env:
         return env
     path = HOME / ".factory" / ".env"
     if not path.exists():
         return None
-    return factory_api_key_from_dotenv(path.read_text())
+    return bounded_secret(factory_api_key_from_dotenv(read_text(path)))
 
 
 def aes256_gcm_decrypt(key: bytes, iv: bytes, tag: bytes, ciphertext: bytes) -> bytes | None:
@@ -102,17 +103,16 @@ def factory_cli_auth() -> dict | None:
     blob_path = HOME / ".factory" / "auth.v2.keyring"
     if not blob_path.exists():
         return None
-    secret = subprocess.run(
+    secret = run_bounded(
         ["secret-tool", "lookup", "service", "Factory CLI", "account", "auth-encryption-key"],
-        capture_output=True,
         timeout=8,
-        check=False,
+        max_bytes=MAX_CREDENTIAL_BYTES,
     )
     if secret.returncode != 0 or not secret.stdout:
         return None
     try:
         key = base64.b64decode(secret.stdout.decode().strip())
-        iv_b64, tag_b64, ct_b64 = blob_path.read_text().strip().split(":")
+        iv_b64, tag_b64, ct_b64 = read_text(blob_path).strip().split(":")
         plain = aes256_gcm_decrypt(key, base64.b64decode(iv_b64), base64.b64decode(tag_b64), base64.b64decode(ct_b64))
         if not plain:
             return None
@@ -157,7 +157,7 @@ def factory_request(url: str, *, bearer: str | None = None, cookie: str | None =
         headers["Cookie"] = cookie
     if bearer:
         headers["Authorization"] = f"Bearer {bearer}"
-    status, body, _ = http(url, headers=headers)
+    status, body, _ = http(url, headers=headers, max_bytes=MAX_FACTORY_RESPONSE_BYTES)
     return status, body
 
 
@@ -386,7 +386,7 @@ def fetch_factory(jars: dict) -> dict:
 
     cli = factory_cli_auth()
     if cli:
-        result = factory_try_session(str(cli.get("access_token") or "") or None, None, "cli")
+        result = factory_try_session(bounded_secret(cli.get("access_token")), None, "cli")
         if result and not result.get("error"):
             return result
 

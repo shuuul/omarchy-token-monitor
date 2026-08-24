@@ -5,9 +5,13 @@ import os
 import pwd
 import shutil
 import sqlite3
-import subprocess
 import tempfile
 from pathlib import Path
+from collector.security import MAX_CREDENTIAL_BYTES, bounded_secret, run_bounded
+
+MAX_COOKIE_ROWS = 128
+MAX_ENCRYPTED_COOKIE_BYTES = 64 * 1024
+MAX_COOKIE_DB_BYTES = 512 * 1024 * 1024
 
 def user_home() -> Path:
     env = os.environ.get("HOME")
@@ -40,11 +44,13 @@ def derive_key(password: bytes) -> bytes:
 
 
 def aes128_cbc_decrypt(key: bytes, data: bytes) -> bytes | None:
-    proc = subprocess.run(
+    if len(data) > MAX_ENCRYPTED_COOKIE_BYTES:
+        return None
+    proc = run_bounded(
         ["openssl", "enc", "-aes-128-cbc", "-d", "-nopad", "-K", key.hex(), "-iv", "20" * 16],
         input=data,
-        capture_output=True,
-        check=False,
+        timeout=5,
+        max_bytes=MAX_ENCRYPTED_COOKIE_BYTES,
     )
     if proc.returncode != 0 or not proc.stdout:
         return None
@@ -74,11 +80,10 @@ def decrypt_cookie(key: bytes, encrypted: bytes, meta_version: int = 24) -> str 
 
 def chrome_password(browser: str) -> bytes | None:
     app = "chrome" if browser == "chrome" else "chromium"
-    proc = subprocess.run(
+    proc = run_bounded(
         ["secret-tool", "lookup", "application", app],
-        capture_output=True,
-        check=False,
         timeout=5,
+        max_bytes=MAX_CREDENTIAL_BYTES,
     )
     if proc.returncode != 0 or not proc.stdout:
         return None
@@ -102,6 +107,8 @@ def load_cookies(browser: str) -> dict[str, dict[str, str]]:
     key = derive_key(password)
     db_path = cookie_db_path(root)
     if not db_path:
+        return {}
+    if db_path.stat().st_size > MAX_COOKIE_DB_BYTES:
         return {}
     tmpdir = Path(tempfile.mkdtemp(prefix="otm-cookies-"))
     try:
@@ -130,10 +137,15 @@ def load_cookies(browser: str) -> dict[str, dict[str, str]]:
         placeholders = ",".join("?" * len(wanted))
         jars: dict[str, dict[str, str]] = {}
         for host, name, encrypted in con.execute(
-            f"SELECT host_key, name, encrypted_value FROM cookies WHERE name IN ({placeholders})",
-            wanted,
+            f"SELECT host_key, name, encrypted_value FROM cookies WHERE name IN ({placeholders}) ORDER BY last_access_utc DESC LIMIT ?",
+            (*wanted, MAX_COOKIE_ROWS),
         ):
+            if not isinstance(host, str) or len(host) > 255:
+                continue
+            if not isinstance(encrypted, bytes) or len(encrypted) > MAX_ENCRYPTED_COOKIE_BYTES:
+                continue
             value = decrypt_cookie(key, encrypted, meta_version)
+            value = bounded_secret(value)
             if value:
                 jars.setdefault(name, {})[host] = value
         con.close()
@@ -148,7 +160,12 @@ def cookie_value(jars: dict[str, dict[str, str]], name: str, hosts: list[str]) -
         if host in by_host:
             return by_host[host]
     for host, value in by_host.items():
-        if any(wanted in host for wanted in hosts):
+        normalized = host.lstrip(".").lower()
+        if any(
+            normalized == wanted.lstrip(".").lower()
+            or normalized.endswith("." + wanted.lstrip(".").lower())
+            for wanted in hosts
+        ):
             return value
     return None
 
@@ -159,7 +176,8 @@ def cookie_header(jars: dict[str, dict[str, str]], pairs: list[tuple[str, list[s
         value = cookie_value(jars, name, hosts)
         if value:
             parts.append(f"{name}={value}")
-    return "; ".join(parts)
+    header = "; ".join(parts)
+    return header if len(header.encode("utf-8")) <= 32 * 1024 else ""
 
 
 def preferred_jars(settings: dict) -> tuple[str, dict[str, dict[str, str]]]:

@@ -6,24 +6,31 @@ from pathlib import Path
 from collector.cookies import HOME
 from collector.http import http
 from collector.schema import iso_from_unix, iso_now, row, window
+from collector.security import bounded_secret, read_json
+
+MAX_CODEX_RESPONSE_BYTES = 512 * 1024
 
 def fetch_codex() -> dict:
     auth_path = Path(os.environ.get("CODEX_HOME", HOME / ".codex")) / "auth.json"
     if not auth_path.exists():
         return row("codex", source="oauth", error="Sign in with `codex login`.")
-    auth = json.loads(auth_path.read_text())
+    auth = read_json(auth_path)
     tokens = auth.get("tokens") or {}
-    access = tokens.get("access_token")
+    access = bounded_secret(tokens.get("access_token"))
     if not access:
         return row("codex", source="oauth", error="Codex auth.json has no access token.")
     headers = {
         "Authorization": f"Bearer {access}",
         "Accept": "application/json",
     }
-    account = tokens.get("account_id")
+    account = bounded_secret(tokens.get("account_id"))
     if account:
         headers["ChatGPT-Account-ID"] = account
-    status, body, _ = http("https://chatgpt.com/backend-api/wham/usage", headers=headers)
+    status, body, _ = http(
+        "https://chatgpt.com/backend-api/wham/usage",
+        headers=headers,
+        max_bytes=MAX_CODEX_RESPONSE_BYTES,
+    )
     if status != 200:
         return row("codex", source="oauth", error=f"Codex usage API returned {status}.")
     data = json.loads(body)

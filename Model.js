@@ -6,6 +6,7 @@
 var DEFAULT_REFRESH_SEC = 300
 var MIN_REFRESH_SEC = 30
 var MAX_REFRESH_SEC = 3600
+var MAX_PROCESS_STREAM_CHARS = 65536
 
 function emptySnapshot() {
   return { providers: [] }
@@ -126,6 +127,12 @@ function collectCommand(settings) {
   var only = settings && settings.only ? String(settings.only).trim() : ""
   if (only) command.push(only)
   return command
+}
+
+function appendBounded(current, chunk) {
+  var before = String(current || "")
+  if (before.length >= MAX_PROCESS_STREAM_CHARS) return before
+  return (before + String(chunk || "")).slice(0, MAX_PROCESS_STREAM_CHARS)
 }
 
 function mergeProviderRows(existing, incoming) {

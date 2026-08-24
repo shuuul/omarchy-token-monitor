@@ -42,9 +42,13 @@ Item {
   }
 
   property string pendingOnly: ""
+  property string processStdout: ""
+  property string processStderr: ""
 
   function refresh(onlyId) {
     if (dashboardProcess.running) return
+    processStdout = ""
+    processStderr = ""
     pendingOnly = onlyId ? String(onlyId) : ""
     dashboardProcess.command = Model.collectCommand({
       collectPath: root.pluginDir + "/collect.py",
@@ -87,19 +91,19 @@ Item {
     id: dashboardProcess
     running: false
 
-    stdout: StdioCollector {
-      id: dashboardStdout
-      waitForEnd: true
+    stdout: SplitParser {
+      onRead: data => root.processStdout = Model.appendBounded(root.processStdout, data)
     }
 
-    stderr: StdioCollector {
-      id: dashboardStderr
-      waitForEnd: true
+    stderr: SplitParser {
+      onRead: data => root.processStderr = Model.appendBounded(root.processStderr, data + "\n")
     }
 
     onExited: function(exitCode) {
-      var stdout = String(dashboardStdout.text || "")
-      var stderr = String(dashboardStderr.text || "")
+      var stdout = root.processStdout
+      var stderr = root.processStderr
+      root.processStdout = ""
+      root.processStderr = ""
       root.applyOutput(stdout !== "" ? stdout : stderr, exitCode)
       if (exitCode !== 0 && stderr !== "")
         console.warn("token-monitor", stderr.trim())

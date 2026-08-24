@@ -5,16 +5,26 @@ from collector.cookies import cookie_header
 from collector.http import http
 from collector.schema import iso_now, row, window
 
+MAX_CURSOR_RESPONSE_BYTES = 512 * 1024
+
 def fetch_cursor(jars: dict) -> dict:
     header = cookie_header(jars, [("WorkosCursorSessionToken", ["cursor.com"])])
     if not header:
         return row("cursor", source="chrome", error="Sign in to cursor.com in Chrome.")
     headers = {"Cookie": header, "Accept": "application/json"}
-    status, body, _ = http("https://cursor.com/api/usage-summary", headers=headers)
+    status, body, _ = http(
+        "https://cursor.com/api/usage-summary",
+        headers=headers,
+        max_bytes=MAX_CURSOR_RESPONSE_BYTES,
+    )
     if status != 200:
         return row("cursor", source="chrome", error=f"Cursor usage-summary returned {status}.")
     data = json.loads(body)
-    me_status, me_body, _ = http("https://cursor.com/api/auth/me", headers=headers)
+    me_status, me_body, _ = http(
+        "https://cursor.com/api/auth/me",
+        headers=headers,
+        max_bytes=MAX_CURSOR_RESPONSE_BYTES,
+    )
     email = None
     if me_status == 200:
         email = (json.loads(me_body) or {}).get("email")

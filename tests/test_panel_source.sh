@@ -6,6 +6,10 @@ grep -Fq 'collect.py' Model.js
 grep -Fq '/usr/bin/python3' Model.js
 ! grep -Fq 'PATH=' Model.js
 grep -Fq 'Model.collectCommand({' Service.qml
+grep -Fq 'stdout: SplitParser {' Service.qml
+grep -Fq 'stderr: SplitParser {' Service.qml
+grep -Fq 'Model.appendBounded' Service.qml
+! grep -Fq 'StdioCollector' Service.qml
 ! grep -Eq 'ampcode.com|chatgpt.com|api.kimi.com|cursor.com|cli-chat-proxy.grok.com|app.notion.com|cloud.zed.dev' \
   Model.js Providers.js Service.qml Panel.qml
 grep -Fq 'ampcode.com' collector/providers/amp.py

@@ -14,6 +14,7 @@ from collector.providers.kimi import fetch_kimi
 from collector.providers.notion import fetch_notion
 from collector.providers.zed import fetch_zed
 from collector.schema import row
+from collector.security import MAX_SNAPSHOT_BYTES, snapshot_json
 
 PROVIDERS = ("amp", "codex", "kimi", "cursor", "grok", "notion", "zed", "factory")
 
@@ -74,6 +75,14 @@ def main() -> int:
     settings = {}
     raw = os.environ.get("OTM_SETTINGS_JSON")
     if raw:
-        settings = json.loads(raw)
-    print(json.dumps(collect(settings, sys.argv[1:]), separators=(",", ":")))
+        try:
+            if len(raw.encode("utf-8")) <= MAX_SNAPSHOT_BYTES:
+                settings = json.loads(raw)
+        except json.JSONDecodeError:
+            settings = {}
+    try:
+        rows = collect(settings, sys.argv[1:])
+    except Exception as exc:
+        rows = [row("collector", source="local", error=str(exc))]
+    sys.stdout.write(snapshot_json(rows) + "\n")
     return 0

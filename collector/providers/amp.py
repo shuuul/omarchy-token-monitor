@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess
 from collector.cookies import cookie_header
 from collector.schema import iso_now, row, window
+from collector.security import run_bounded
+
+MAX_AMP_OUTPUT_BYTES = 256 * 1024
 
 def parse_amp_text(text: str) -> dict:
     text = re.sub(r"\x1b\[[0-9;]*m", "", text)
@@ -36,7 +38,12 @@ def parse_amp_text(text: str) -> dict:
 def fetch_amp(jars: dict) -> dict:
     amp = shutil.which("amp")
     if amp:
-        proc = subprocess.run([amp, "usage"], capture_output=True, text=True, timeout=25, check=False)
+        proc = run_bounded(
+            [amp, "usage"],
+            timeout=25,
+            max_bytes=MAX_AMP_OUTPUT_BYTES,
+            text=True,
+        )
         if proc.returncode == 0 and "Amp Free" in (proc.stdout or ""):
             return parse_amp_text(proc.stdout)
         if proc.returncode != 0:

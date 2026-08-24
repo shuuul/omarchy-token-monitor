@@ -2,40 +2,40 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 from collector.http import http
 from collector.schema import iso_now, row, window
+from collector.security import MAX_CREDENTIAL_BYTES, bounded_secret, run_bounded
+
+MAX_ZED_RESPONSE_BYTES = 512 * 1024
+MAX_KEYRING_LIST_BYTES = 256 * 1024
 
 def zed_keyring_items() -> list[tuple[str, str]]:
     dest = "org.freedesktop.secrets"
     collection = "/org/freedesktop/secrets/collection/Default_5fkeyring"
-    listing = subprocess.run(
+    listing = run_bounded(
         ["busctl", "--user", "get-property", dest, collection, "org.freedesktop.Secret.Collection", "Items"],
-        capture_output=True,
-        text=True,
         timeout=5,
-        check=False,
+        max_bytes=MAX_KEYRING_LIST_BYTES,
+        text=True,
     )
     if listing.returncode != 0:
         return []
-    paths = re.findall(r'"(/org/freedesktop/secrets/collection/[^"]+)"', listing.stdout)
+    paths = re.findall(r'"(/org/freedesktop/secrets/collection/[^"]+)"', listing.stdout)[:128]
     found = []
     for path in paths:
-        label = subprocess.run(
+        label = run_bounded(
             ["busctl", "--user", "get-property", dest, path, "org.freedesktop.Secret.Item", "Label"],
-            capture_output=True,
-            text=True,
             timeout=5,
-            check=False,
+            max_bytes=MAX_KEYRING_LIST_BYTES,
+            text=True,
         )
         if "zed-github-account" not in label.stdout:
             continue
-        attrs = subprocess.run(
+        attrs = run_bounded(
             ["busctl", "--user", "get-property", dest, path, "org.freedesktop.Secret.Item", "Attributes"],
-            capture_output=True,
-            text=True,
             timeout=5,
-            check=False,
+            max_bytes=MAX_KEYRING_LIST_BYTES,
+            text=True,
         )
         url = re.search(r'"url"\s+"([^"]+)"', attrs.stdout)
         user = re.search(r'"username"\s+"([^"]+)"', attrs.stdout)
@@ -49,21 +49,24 @@ def fetch_zed() -> dict:
     if not items:
         return row("zed", source="keyring", error="Sign in to Zed (Command Palette → client: sign in).")
     url, user_id = items[0]
-    secret = subprocess.run(
+    secret = run_bounded(
         ["secret-tool", "lookup", "url", url],
-        capture_output=True,
         timeout=8,
-        check=False,
+        max_bytes=MAX_CREDENTIAL_BYTES,
     )
     if secret.returncode != 0 or not secret.stdout:
         return row("zed", source="keyring", error="Could not read the Zed keyring item.")
-    token = secret.stdout.decode().rstrip("\n")
+    token = bounded_secret(secret.stdout.decode(errors="replace"))
+    user_id = bounded_secret(user_id)
+    if not token or not user_id:
+        return row("zed", source="keyring", error="The Zed keyring item exceeds the credential limit.")
     status, body, _ = http(
         "https://cloud.zed.dev/client/users/me",
         headers={
             "Authorization": f"{user_id} {token}",
             "Accept": "application/json",
         },
+        max_bytes=MAX_ZED_RESPONSE_BYTES,
     )
     if status != 200:
         return row("zed", source="keyring", error=f"Zed cloud API returned {status}.")

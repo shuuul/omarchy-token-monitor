@@ -84,6 +84,33 @@ The Python collector is required because:
 
 Stdout is one JSON array. Cookies and tokens never appear there.
 
+## Credential destinations and data limits
+
+The collector sends credentials only over HTTPS to the fixed provider hosts
+below. Redirects are not followed, so an authenticated request cannot move to
+another host. It never sends one provider's credentials to another provider.
+
+| Credential source | Sent only to |
+| --- | --- |
+| Amp `session` cookie | Not sent; its presence only selects the local sign-in message |
+| Codex OAuth access token and account ID | `chatgpt.com` |
+| Kimi refresh/access token or `kimi-auth` cookie | Matching region only: `auth.kimi.com` / `api.kimi.com`, or `auth.kimi.ai` / `api.kimi.ai` |
+| Cursor `WorkosCursorSessionToken` cookie | `cursor.com` |
+| Grok OIDC token | `cli-chat-proxy.grok.com` |
+| Grok `sso` / `sso-rw` cookies | `grok.com`, `cli-chat-proxy.grok.com`, and `accounts.x.ai` |
+| Notion `token_v2` cookie | `app.notion.com` |
+| Zed keyring user ID and token | `cloud.zed.dev` |
+| Droid API key, CLI token, or Factory cookies | `api.factory.ai` and `app.factory.ai` |
+
+The Chrome Safe Storage password, Factory decryption key, and local auth files
+remain local. They are used only to recover the provider credential named in
+the table.
+
+HTTP bodies have provider-specific limits from 512 KiB to 2 MiB. The cookie
+query reads at most 128 matching rows; individual credentials are limited to
+16 KiB; local command output is bounded; display/error fields are truncated;
+and the JSON stream retained by QML is limited to 64 KiB.
+
 ## Sign-in map
 
 | Provider | CodexBar ID | How this panel reads it |

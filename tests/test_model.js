@@ -18,6 +18,8 @@ assert.deepStrictEqual(
   Array.from(model.collectCommand({ collectPath: "/tmp/collect.py", only: "grok" })),
   ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py", "grok"],
 )
+assert.strictEqual(model.appendBounded("a", "b"), "ab")
+assert.strictEqual(model.appendBounded("x".repeat(65536), "overflow").length, 65536)
 assert.deepStrictEqual(
   model.mergeProviderRows(
     [{ provider: "codex", usage: { loginMethod: "old" } }, { provider: "grok", usage: { loginMethod: "keep" } }],

@@ -8,6 +8,9 @@ from pathlib import Path
 from collector.cookies import HOME, cookie_header
 from collector.http import http
 from collector.schema import iso_from_unix, iso_now, row, window
+from collector.security import bounded_secret, read_json
+
+MAX_GROK_RESPONSE_BYTES = 512 * 1024
 
 def parse_grok_grpc(payload: bytes) -> dict:
     # grpc-web: 1-byte flag + 4-byte big-endian length + protobuf message + trailers
@@ -110,7 +113,7 @@ def grok_env_token() -> str | None:
         raw = raw[7:].strip()
     if not raw or raw.lower().startswith(("cookie:", "xai-")) or "=" in raw:
         return None
-    return raw
+    return bounded_secret(raw)
 
 
 def grok_select_auth_entry(root: dict) -> tuple[str, dict] | None:
@@ -135,7 +138,7 @@ def grok_credentials_from_entry(scope: str, entry: dict) -> dict:
     now = datetime.now(timezone.utc)
     return {
         "scope": scope,
-        "access_token": str(entry.get("key") or "").strip(),
+        "access_token": bounded_secret(entry.get("key")),
         "auth_mode": str(entry.get("auth_mode") or "").strip(),
         "email": str(entry.get("email") or "").strip() or None,
         "principal_type": str(entry.get("principal_type") or "").strip() or None,
@@ -160,7 +163,7 @@ def grok_load_credentials() -> dict | None:
     if not path.is_file():
         return None
     try:
-        data = json.loads(path.read_text())
+        data = read_json(path)
     except (OSError, json.JSONDecodeError):
         return None
     if not isinstance(data, dict):
@@ -225,6 +228,7 @@ def grok_oauth_settings_plan(token: str) -> str:
         "https://cli-chat-proxy.grok.com/v1/settings",
         headers=grok_bearer_headers(token),
         timeout=2,
+        max_bytes=MAX_GROK_RESPONSE_BYTES,
     )
     if status != 200:
         return ""
@@ -236,6 +240,7 @@ def grok_settings_plan(header: str) -> str:
         "https://cli-chat-proxy.grok.com/v1/settings",
         headers={"Cookie": header, "Accept": "application/json"},
         timeout=8,
+        max_bytes=MAX_GROK_RESPONSE_BYTES,
     )
     if status != 200:
         return ""
@@ -252,6 +257,7 @@ def grok_session_plan(header: str) -> tuple[str, str | None]:
             "Referer": "https://accounts.x.ai/",
         },
         timeout=8,
+        max_bytes=MAX_GROK_RESPONSE_BYTES,
     )
     if status != 200:
         return "", None
@@ -304,6 +310,7 @@ def grok_oauth_billing(token: str) -> tuple[float, str | None] | None:
         "https://cli-chat-proxy.grok.com/v1/billing?format=credits",
         headers=grok_bearer_headers(token),
         timeout=15,
+        max_bytes=MAX_GROK_RESPONSE_BYTES,
     )
     if status != 200:
         return None
@@ -354,6 +361,7 @@ def fetch_grok(jars: dict) -> dict:
             "Accept": "*/*",
         },
         body=b"\x00\x00\x00\x00\x00",
+        max_bytes=MAX_GROK_RESPONSE_BYTES,
     )
     if status != 200:
         return row("grok", source="chrome", error=f"Grok billing returned {status}.")

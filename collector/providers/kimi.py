@@ -7,8 +7,10 @@ from pathlib import Path
 from collector.cookies import HOME, cookie_value
 from collector.http import http
 from collector.schema import iso_now, row, window
+from collector.security import bounded_secret, read_json
 
 KIMI_CLIENT_ID = "17e5f671-d194-4dfb-9706-5516cb48c098"
+MAX_KIMI_RESPONSE_BYTES = 512 * 1024
 KIMI_REGIONS = (
     {
         "id": "cn",
@@ -48,7 +50,7 @@ def write_kimi_creds(path: Path, creds: dict) -> None:
 
 
 def refresh_kimi_creds(creds: dict, oauth_url: str) -> dict | None:
-    refresh = creds.get("refresh_token")
+    refresh = bounded_secret(creds.get("refresh_token"))
     if not refresh:
         return None
     body = urllib.parse.urlencode({
@@ -64,16 +66,19 @@ def refresh_kimi_creds(creds: dict, oauth_url: str) -> dict | None:
             "Accept": "application/json",
         },
         body=body,
+        max_bytes=MAX_KIMI_RESPONSE_BYTES,
     )
     if status != 200:
         return None
     data = json.loads(raw)
-    if not data.get("access_token"):
+    access_token = bounded_secret(data.get("access_token"))
+    refresh_token = bounded_secret(data.get("refresh_token")) or refresh
+    if not access_token:
         return None
     expires_in = int(data.get("expires_in") or 900)
     return {
-        "access_token": data["access_token"],
-        "refresh_token": data.get("refresh_token") or refresh,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "expires_at": int(time.time()) + expires_in,
         "scope": data.get("scope") or creds.get("scope") or "kimi-code",
         "token_type": data.get("token_type") or "Bearer",
@@ -88,6 +93,7 @@ def kimi_plan_name(token: str, region: dict, usage_data: dict) -> str:
         status, body, _ = http(
             me_url,
             headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+            max_bytes=MAX_KIMI_RESPONSE_BYTES,
         )
         if status == 200:
             try:
@@ -104,6 +110,7 @@ def kimi_usage_from_token(token: str, source: str, region: dict) -> dict:
     status, body, _ = http(
         region["api"],
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        max_bytes=MAX_KIMI_RESPONSE_BYTES,
     )
     if status != 200:
         return row("kimi", source=source, error=f"{region['name']} token expired. Run `kimi login`.")
@@ -151,13 +158,13 @@ def kimi_cred_files(region: dict) -> list[Path]:
 
 def try_kimi_region(jars: dict, region: dict) -> dict | None:
     for cred_path in kimi_cred_files(region):
-        creds = json.loads(cred_path.read_text())
+        creds = read_json(cred_path)
         if not kimi_token_fresh(creds):
             refreshed = refresh_kimi_creds(creds, region["oauth"])
             if refreshed:
                 write_kimi_creds(cred_path, refreshed)
                 creds = refreshed
-        token = creds.get("access_token")
+        token = bounded_secret(creds.get("access_token"))
         if not token:
             continue
         result = kimi_usage_from_token(token, "cli", region)

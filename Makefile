@@ -9,6 +9,7 @@ test-js:
 	node tests/test_providers.js
 	node tests/test_model.js
 	python3 tests/test_collect.py
+	python3 tests/test_security.py
 	@for test in tests/test_provider_*.py; do python3 "$$test"; done
 
 test-shell:
