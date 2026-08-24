@@ -123,7 +123,7 @@ function collectScript() {
 function collectCommand(settings) {
   var script = settings && settings.collectPath ? String(settings.collectPath) : ""
   if (!script) script = collectScript()
-  var command = ["/usr/bin/timeout", "25", "/usr/bin/python3", script]
+  var command = ["/usr/bin/timeout", "45", "/usr/bin/python3", script]
   var only = settings && settings.only ? String(settings.only).trim() : ""
   if (only) command.push(only)
   return command
@@ -591,6 +591,22 @@ function formatDuration(ms) {
 function parseStampMs(stamp) {
   var ms = Date.parse(String(stamp || ""))
   return isFinite(ms) ? ms : null
+}
+
+// True when no provider row carries a readable updatedAt, or the newest
+// one is older than the refresh interval. Used to refresh on panel open
+// even when the refresh-on-open setting is off.
+function snapshotStale(providers, intervalSec, nowMs) {
+  var rows = Array.isArray(providers) ? providers : []
+  var newest = null
+  for (var i = 0; i < rows.length; i++) {
+    var ms = parseStampMs(rows[i] && rows[i].updatedAt)
+    if (ms !== null && (newest === null || ms > newest)) newest = ms
+  }
+  if (newest === null) return true
+  var now = isFinite(nowMs) ? nowMs : Date.now()
+  var interval = isFinite(intervalSec) && intervalSec > 0 ? intervalSec : DEFAULT_REFRESH_SEC
+  return now - newest >= interval * 1000
 }
 
 function pad2(value) {

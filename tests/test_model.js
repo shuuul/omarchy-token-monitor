@@ -6,17 +6,17 @@ const providers = load("Providers.js")
 
 assert.deepStrictEqual(Array.from(model.collectCommand({})), [
   "/usr/bin/timeout",
-  "25",
+  "45",
   "/usr/bin/python3",
   "collect.py",
 ])
 assert.deepStrictEqual(
   Array.from(model.collectCommand({ collectPath: "/tmp/collect.py" })),
-  ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py"],
+  ["/usr/bin/timeout", "45", "/usr/bin/python3", "/tmp/collect.py"],
 )
 assert.deepStrictEqual(
   Array.from(model.collectCommand({ collectPath: "/tmp/collect.py", only: "grok" })),
-  ["/usr/bin/timeout", "25", "/usr/bin/python3", "/tmp/collect.py", "grok"],
+  ["/usr/bin/timeout", "45", "/usr/bin/python3", "/tmp/collect.py", "grok"],
 )
 assert.strictEqual(model.appendBounded("a", "b"), "ab")
 assert.strictEqual(
@@ -43,6 +43,18 @@ assert.strictEqual(model.browserName({ browser: "chromium" }), "chromium")
 assert.strictEqual(model.refreshOnOpen({}), false)
 assert.strictEqual(model.refreshOnOpen({ refreshOnOpen: false }), false)
 assert.strictEqual(model.refreshOnOpen({ refreshOnOpen: true }), true)
+assert.strictEqual(model.snapshotStale([], 300, 1000000), true)
+assert.strictEqual(model.snapshotStale([{ updatedAt: "not a date" }], 300, 1000000), true)
+assert.strictEqual(model.snapshotStale([{ updatedAt: new Date(1000000).toISOString() }], 300, 1000000), false)
+assert.strictEqual(model.snapshotStale([{ updatedAt: new Date(1000000 - 301000).toISOString() }], 300, 1000000), true)
+assert.strictEqual(
+  model.snapshotStale(
+    [{ updatedAt: new Date(1000000 - 301000).toISOString() }, { updatedAt: new Date(1000000).toISOString() }],
+    300,
+    1000000,
+  ),
+  false,
+)
 assert.strictEqual(model.showRemaining({}), true)
 assert.strictEqual(model.showRemaining({ showRemaining: false }), false)
 assert.strictEqual(model.showRemaining({ showRemaining: true }), true)

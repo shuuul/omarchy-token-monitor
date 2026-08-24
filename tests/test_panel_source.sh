@@ -78,16 +78,16 @@ grep -Fq 'moduleName: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'ipcTarget: "shuuul.token-monitor"' Panel.qml
 grep -Fq 'function refresh(): string' Panel.qml
 grep -Fq 'function next(): string' Panel.qml
-# Opening the panel fetches every provider only when Settings → Refresh
-# on open is on. The default stays off. Keep the last selected provider
-# instead of jumping to the most-used headline.
+# Opening the panel fetches every provider when Settings → Refresh on open
+# is on, or when the snapshot is missing/stale. Keep the last selected
+# provider instead of jumping to the most-used headline.
 grep -Fq 'root.restoreSelectedProvider()' Panel.qml
 ! grep -Fq 'if (usage.headline && usage.headline.id) selectedProviderId = usage.headline.id' Panel.qml
 grep -Fq 'label: "Refresh on open"' Panel.qml
 grep -Fq 'label: "Show remaining"' Panel.qml
 grep -Fq 'label: "Hide email"' Panel.qml
 grep -Fq 'Model.refreshOnOpen(root.settings)' Panel.qml
-grep -Fq 'if (Model.refreshOnOpen(root.settings)) usage.refresh("")' Panel.qml
+grep -Fq 'if (Model.refreshOnOpen(root.settings) || Model.snapshotStale(usage.providers, usage.refreshIntervalSec, root.nowMs)) usage.refresh("")' Panel.qml
 grep -Fq 'usage.refresh(onlyId || selectedProviderId)' Panel.qml
 ! grep -Eq '\broot\.state\b' Service.qml Panel.qml
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 from collector.cookies import preferred_jars
 from collector.providers.amp import fetch_amp
@@ -59,16 +60,25 @@ def collect(settings: dict | None = None, argv: list[str] | None = None) -> list
         "zed": lambda: fetch_zed(jars),
         "factory": lambda: fetch_factory(jars),
     }
-    out = []
+    wanted = []
     for provider in requested_providers(settings, argv):
         entry = enabled.get(provider) if isinstance(enabled, dict) else None
         if entry and entry.get("enabled") is False:
             continue
+        wanted.append(provider)
+
+    def fetch(provider: str) -> dict:
         try:
-            out.append(fetchers[provider]())
+            return fetchers[provider]()
         except Exception as exc:
-            out.append(row(provider, source=browser, error=str(exc)))
-    return out
+            return row(provider, source=browser, error=str(exc))
+
+    if not wanted:
+        return []
+    # Providers are fetched in parallel so a full snapshot stays well under
+    # the timeout the QML side wraps around collect.py.
+    with ThreadPoolExecutor(max_workers=len(wanted)) as pool:
+        return list(pool.map(fetch, wanted))
 
 
 def main() -> int:

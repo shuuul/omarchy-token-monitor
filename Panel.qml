@@ -163,15 +163,16 @@ Panel {
 
   onProviderIndexChanged: if (panelFlick) panelFlick.contentY = 0
   onProvidersChanged: root.restoreSelectedProvider()
-  // Opening the panel fetches only when Settings → Refresh on open is on.
-  // Default is off: data then comes from the interval timer and Refresh.
-  // Do not jump to the most-used headline; keep the last selected provider.
+  // Opening the panel always refreshes when Settings → Refresh on open is
+  // on. Otherwise it refreshes only when the snapshot is missing or older
+  // than the refresh interval. Do not jump to the most-used headline;
+  // keep the last selected provider.
   onOpenedChanged: if (opened) {
     cursorActive = false
     nowMs = Date.now()
     if (panelFlick) panelFlick.contentY = 0
     root.restoreSelectedProvider()
-    if (Model.refreshOnOpen(root.settings)) usage.refresh("")
+    if (Model.refreshOnOpen(root.settings) || Model.snapshotStale(usage.providers, usage.refreshIntervalSec, root.nowMs)) usage.refresh("")
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
   onSettingsChanged: {
