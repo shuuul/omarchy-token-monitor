@@ -40,9 +40,10 @@ def amp_api_token() -> str | None:
     if env:
         return env
     path = HOME / ".local/share/amp" / "secrets.json"
-    if not path.exists():
+    try:
+        data = read_json(path)
+    except OSError:
         return None
-    data = read_json(path)
     if not isinstance(data, dict):
         return None
     return bounded_secret(data.get(AMP_SECRETS_KEY))

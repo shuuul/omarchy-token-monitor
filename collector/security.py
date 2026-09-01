@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import selectors
+import stat
 import subprocess
 import tempfile
 import time
@@ -27,8 +28,38 @@ def bounded_secret(value: object) -> str | None:
 
 
 def read_bytes(path: Path, max_bytes: int = MAX_AUTH_FILE_BYTES) -> bytes:
-    with path.open("rb") as handle:
-        data = handle.read(max_bytes + 1)
+    """Read a credential file through one no-follow, nonblocking descriptor.
+
+    The open never follows a final symlink and never blocks on a FIFO. The same
+    descriptor is checked for a regular file owned by the current user with no
+    group or other permissions before any byte is read, so a swapped path
+    cannot turn unrelated local bytes into a credential.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NONBLOCK", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    fd = os.open(path, flags)
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError(f"{path.name} is not a regular file")
+        if info.st_uid != getattr(os, "geteuid", lambda: -1)():
+            raise ValueError(f"{path.name} is not owned by the current user")
+        if stat.S_IMODE(info.st_mode) & 0o077:
+            raise ValueError(f"{path.name} is accessible to group or other")
+        chunks = []
+        total = 0
+        while True:
+            chunk = os.read(fd, min(64 * 1024, max_bytes + 1 - total))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+            if total > max_bytes:
+                break
+        data = b"".join(chunks)
+    finally:
+        os.close(fd)
     if len(data) > max_bytes:
         raise ValueError(f"{path.name} exceeds {max_bytes} bytes")
     return data

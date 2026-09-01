@@ -158,7 +158,10 @@ def kimi_cred_files(region: dict) -> list[Path]:
 
 def try_kimi_region(jars: dict, region: dict) -> dict | None:
     for cred_path in kimi_cred_files(region):
-        creds = read_json(cred_path)
+        try:
+            creds = read_json(cred_path)
+        except OSError:
+            continue
         if not kimi_token_fresh(creds):
             refreshed = refresh_kimi_creds(creds, region["oauth"])
             if refreshed:

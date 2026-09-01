@@ -105,7 +105,11 @@ another host. It never sends one provider's credentials to another provider.
 
 The Chrome Safe Storage password, Factory decryption key, and local auth files
 remain local. They are used only to recover the provider credential named in
-the table.
+the table. Auth and cookie files are read through a single no-follow,
+nonblocking descriptor that is verified to be a regular file owned by the
+current user before any byte is read, so a swapped or replaced path cannot turn
+unrelated local bytes into a credential; `tests/test_security.py` scans the
+collector sources and fails `make test` on a regression.
 
 HTTP bodies have provider-specific limits from 512 KiB to 2 MiB. The cookie
 query reads at most 128 matching rows; individual credentials are limited to

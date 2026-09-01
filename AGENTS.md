@@ -54,11 +54,17 @@ output, settings, and collector JSON are untrusted input. The limits in
 `collector/security.py`, `collector/http.py`, `collector/cookies.py`, `Model.js`,
 and `Service.qml` are product invariants, not optional hardening.
 
-- Use `read_bytes`, `read_text`, or `read_json` for auth/config files and
-  `bounded_secret` for tokens, cookie values, account IDs, and API keys. Do not
-  add unbounded `Path.read_*` calls for credentials. Kimi credential refreshes
-  must remain an atomic same-directory replace with directory mode `0700` and
-  file mode `0600`.
+- Read auth/config files only through `read_bytes`, `read_text`, or `read_json`,
+  and use `bounded_secret` for tokens, cookie values, account IDs, and API keys.
+  `read_bytes` is descriptor-bound: `os.open` with `O_NOFOLLOW` and `O_NONBLOCK`,
+  then an `fstat` check for a regular file owned by the current user with no
+  group/other permissions, before any byte is read. Do not add unbounded
+  `Path.read_*` or `Path.open` calls for credentials, and do not probe a
+  credential path with `exists()` before reading; call the reader and catch
+  `OSError` for missing or swapped paths instead. `tests/test_security.py`
+  scans `collector/` sources for those patterns and fails `make test` on a
+  regression. Kimi credential refreshes must remain an atomic same-directory
+  replace with directory mode `0700` and file mode `0600`.
 - Run local commands with `run_bounded`, an argument array, an explicit timeout,
   and an output cap. Do not use `shell=True`, unbounded `subprocess.run`, or hold
   arbitrary command output in memory. Preserve the inherited shell environment;

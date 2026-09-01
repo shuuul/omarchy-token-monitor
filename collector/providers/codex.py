@@ -12,9 +12,10 @@ MAX_CODEX_RESPONSE_BYTES = 512 * 1024
 
 def fetch_codex() -> dict:
     auth_path = Path(os.environ.get("CODEX_HOME", HOME / ".codex")) / "auth.json"
-    if not auth_path.exists():
+    try:
+        auth = read_json(auth_path)
+    except OSError:
         return row("codex", source="oauth", error="Sign in with `codex login`.")
-    auth = read_json(auth_path)
     tokens = auth.get("tokens") or {}
     access = bounded_secret(tokens.get("access_token"))
     if not access:

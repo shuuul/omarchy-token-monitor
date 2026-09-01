@@ -48,9 +48,11 @@ def factory_api_key() -> str | None:
     if env:
         return env
     path = HOME / ".factory" / ".env"
-    if not path.exists():
+    try:
+        text = read_text(path)
+    except OSError:
         return None
-    return bounded_secret(factory_api_key_from_dotenv(read_text(path)))
+    return bounded_secret(factory_api_key_from_dotenv(text))
 
 
 def aes256_gcm_decrypt(key: bytes, iv: bytes, tag: bytes, ciphertext: bytes) -> bytes | None:
@@ -112,7 +114,11 @@ def factory_cli_auth() -> dict | None:
         return None
     try:
         key = base64.b64decode(secret.stdout.decode().strip())
-        iv_b64, tag_b64, ct_b64 = read_text(blob_path).strip().split(":")
+        try:
+            blob = read_text(blob_path)
+        except OSError:
+            return None
+        iv_b64, tag_b64, ct_b64 = blob.strip().split(":")
         plain = aes256_gcm_decrypt(key, base64.b64decode(iv_b64), base64.b64decode(tag_b64), base64.b64decode(ct_b64))
         if not plain:
             return None
