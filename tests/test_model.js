@@ -116,7 +116,7 @@ const rows = model.providersFromSnapshot(
   Array.from(providers.enabledIds({})),
   providers.catalog(),
 )
-assert.strictEqual(rows.length, 8)
+assert.strictEqual(rows.length, 9)
 const orderedRows = model.providersFromSnapshot(
   parsed,
   Array.from(providers.enabledIds({ providerOrder: ["factory", "cursor", "codex"] })),

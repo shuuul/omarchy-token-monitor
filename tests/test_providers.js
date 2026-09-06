@@ -5,14 +5,17 @@ const providers = load("Providers.js")
 
 assert.deepStrictEqual(
   Array.from(providers.ids()),
-  ["amp", "codex", "kimi", "cursor", "grok", "notion", "zed", "factory"],
+  ["amp", "antigravity", "codex", "kimi", "cursor", "grok", "notion", "zed", "factory"],
 )
 
 assert.strictEqual(providers.displayName("kimi"), "Kimi Code")
 assert.strictEqual(providers.displayName("notion"), "Notion AI")
 assert.strictEqual(providers.displayName("amp"), "Amp")
+assert.strictEqual(providers.displayName("antigravity"), "Antigravity")
 assert.strictEqual(providers.displayName("factory"), "Droid")
+assert.strictEqual(providers.monogram("antigravity"), "Ag")
 assert.strictEqual(providers.dashboardUrl("amp"), "https://ampcode.com/settings/usage")
+assert.strictEqual(providers.dashboardUrl("antigravity"), "")
 assert.strictEqual(providers.dashboardUrl("codex"), "https://chatgpt.com/codex/settings/usage")
 assert.strictEqual(providers.dashboardUrl("kimi"), "https://www.kimi.com/code/console")
 assert.strictEqual(providers.dashboardUrl("kimi", { plan: "Allegretto · kimi.ai" }), "https://www.kimi.ai/code/console")
@@ -30,18 +33,18 @@ assert.strictEqual(
 )
 assert.deepStrictEqual(
   Array.from(providers.enabledIds({ providers: { grok: { enabled: false }, zed: { enabled: false } } })),
-  ["amp", "codex", "kimi", "cursor", "notion", "factory"],
+  ["amp", "antigravity", "codex", "kimi", "cursor", "notion", "factory"],
 )
 assert.deepStrictEqual(
   Array.from(providers.orderedIds({ providerOrder: ["factory", "cursor", "unknown", "factory"] })),
-  ["factory", "cursor", "amp", "codex", "kimi", "grok", "notion", "zed"],
+  ["factory", "cursor", "amp", "antigravity", "codex", "kimi", "grok", "notion", "zed"],
 )
 assert.deepStrictEqual(
   Array.from(providers.enabledIds({
     providerOrder: ["factory", "cursor", "amp"],
     providers: { cursor: { enabled: false } },
   })),
-  ["factory", "amp", "codex", "kimi", "grok", "notion", "zed"],
+  ["factory", "amp", "antigravity", "codex", "kimi", "grok", "notion", "zed"],
 )
 assert.deepStrictEqual(
   Array.from(providers.moveId(["amp", "codex", "kimi"], 2, 0)),
@@ -55,6 +58,6 @@ assert.strictEqual(catalog[0].id, "zed")
 assert.strictEqual(catalog[0].enabled, true)
 assert.strictEqual(catalog[1].id, "amp")
 assert.strictEqual(catalog[1].enabled, false)
-assert.strictEqual(catalog.length, 8)
+assert.strictEqual(catalog.length, 9)
 
 console.log("provider catalog tests passed")

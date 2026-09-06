@@ -9,8 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collector.cookies import cookie_value
-from collector.http import ALLOWED_HTTPS_HOSTS, _read_bounded, http
-from collector.security import MAX_CREDENTIAL_BYTES, bounded_secret, read_bytes, run_bounded
+from collector.http import ALLOWED_HTTPS_HOSTS, _read_bounded, http, loopback_http
+from collector.security import MAX_CREDENTIAL_BYTES, bounded_secret, read_bytes, read_proc_bytes, run_bounded
 
 
 assert _read_bounded(io.BytesIO(b"abc"), 3) == b"abc"
@@ -26,6 +26,35 @@ try:
 except ValueError:
     pass
 assert "ampcode.com" in ALLOWED_HTTPS_HOSTS
+assert "127.0.0.1" not in ALLOWED_HTTPS_HOSTS
+
+for bad_port in (0, -1, 65536, "8080", None, True):
+    try:
+        loopback_http(bad_port, "/exa.x/y", body=b"{}", max_bytes=64)
+        raise AssertionError(f"invalid loopback port {bad_port!r} was accepted")
+    except ValueError:
+        pass
+for bad_path in ("exa.x/y", "", "x" * 300, "/exa.x y", "/exa.x\ty", "/exa\nx"):
+    try:
+        loopback_http(8080, bad_path, body=b"{}", max_bytes=64)
+        raise AssertionError(f"invalid loopback path {bad_path!r} was accepted")
+    except ValueError:
+        pass
+try:
+    loopback_http(8080, "/exa.x/y", body=b"", max_bytes=64)
+    raise AssertionError("empty loopback body was accepted")
+except ValueError:
+    pass
+try:
+    loopback_http(8080, "/exa.x/y", body=b"x" * (64 * 1024 + 1), max_bytes=64)
+    raise AssertionError("oversized loopback body was accepted")
+except ValueError:
+    pass
+# A loopback probe to a port without a listener reports failure instead of
+# raising and never reaches the provider HTTP client.
+status, body, _ = loopback_http(9, "/exa.language_server_pb.LanguageServerService/GetUnleashData",
+                                body=b"{}", max_bytes=64, timeout=1)
+assert status == 0
 
 assert bounded_secret("x" * MAX_CREDENTIAL_BYTES) == "x" * MAX_CREDENTIAL_BYTES
 assert bounded_secret("x" * (MAX_CREDENTIAL_BYTES + 1)) is None
@@ -119,6 +148,31 @@ with tempfile.TemporaryDirectory() as scratch:
     try:
         read_bytes(credential, 0)
         raise AssertionError("oversized credential was accepted")
+    except ValueError:
+        pass
+
+    # procfs reads are for kernel-synthesized root-owned world-readable files:
+    # no ownership check, but still no-follow, regular-file-only, and bounded.
+    proc_file = base / "net-tcp-fixture"
+    proc_file.write_bytes(b"  0: 0100007F:1F90 00000000:0000 0A ... 12345 1\n")
+    assert b"12345" in read_proc_bytes(proc_file, 4096)
+    try:
+        read_proc_bytes(proc_file, 4)
+        raise AssertionError("oversized procfs read was accepted")
+    except ValueError:
+        pass
+    proc_symlink = base / "proc-symlink"
+    proc_symlink.symlink_to(proc_file)
+    try:
+        read_proc_bytes(proc_symlink, 4096)
+        raise AssertionError("symlinked procfs path was followed")
+    except OSError:
+        pass
+    proc_fifo = base / "proc-fifo"
+    os.mkfifo(proc_fifo)
+    try:
+        read_proc_bytes(proc_fifo, 4096)
+        raise AssertionError("FIFO procfs path was accepted")
     except ValueError:
         pass
 

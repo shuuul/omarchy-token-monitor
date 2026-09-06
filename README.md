@@ -1,7 +1,7 @@
 # Token Monitor for Omarchy
 
-An Omarchy bar panel for AI coding quotas: Amp, Codex, Kimi Code, Cursor, Grok,
-Notion AI, Zed, and Droid.
+An Omarchy bar panel for AI coding quotas: Amp, Antigravity, Codex, Kimi Code,
+Cursor, Grok, Notion AI, Zed, and Droid.
 
 Use it to see remaining weekly and session usage next to the selected provider
 icon, open a panel for the supported accounts, and refresh one provider
@@ -24,6 +24,7 @@ AI coding service you want tracked, contributions are welcome, see
 - Omarchy
 - Python 3
 - Google Chrome or Chromium, for Cursor, Notion, Grok, and Amp cookies
+- Antigravity desktop app or `agy` CLI signed in, for Antigravity usage
 
 ## Getting Started
 
@@ -33,12 +34,14 @@ Sign in locally for the providers you use:
 codex login
 amp
 kimi login
+agy
 ```
 
 Sign in to cursor.com, app.notion.com, and grok.com in Chrome. Zed uses the
 desktop client's Linux keyring item after `client: sign in`. Droid uses the
 local `droid` login, `FACTORY_API_KEY` / `~/.factory/.env`, or app.factory.ai
-Chrome cookies.
+Chrome cookies. Antigravity needs the desktop app open or a signed-in `agy`
+CLI running; the panel reads usage from its local language server.
 
 Install the Omarchy plugin:
 
@@ -62,7 +65,9 @@ The bar shows the selected provider icon and two remaining meters: weekly on
 top, session underneath. Left click opens the panel. Right click refreshes the
 selected provider. Middle click moves to the next one. Usage dashboard opens
 the provider site CodexBar uses for leftover quota. Cursor's panel also shows
-its included Grok Bot weekly allowance. Zed has no dashboard page.
+its included Grok Bot weekly allowance. Antigravity tracks a Gemini and a
+Claude/GPT lane per window and shows the more constrained lane of each. Zed
+and Antigravity have no dashboard page.
 
 ## Why the Python collector exists
 
@@ -102,6 +107,7 @@ another host. It never sends one provider's credentials to another provider.
 | Notion `token_v2` cookie | `app.notion.com` |
 | Zed keyring user ID and token | `cloud.zed.dev` |
 | Droid API key, CLI token, or Factory cookies | `api.factory.ai` and `app.factory.ai` |
+| Antigravity — no credential; quota requests carry only the app's local CSRF token | Loopback only: `127.0.0.1:<port>` language server |
 
 The Chrome Safe Storage password, Factory decryption key, and local auth files
 remain local. They are used only to recover the provider credential named in
@@ -128,6 +134,7 @@ and the JSON stream retained by QML is limited to 64 KiB.
 | Notion AI | `notion` | Chrome cookie `token_v2` |
 | Zed | `zed` | Linux keyring item `zed-github-account` |
 | Droid | `factory` | `droid` CLI keyring, `FACTORY_API_KEY`, or Chrome cookies |
+| Antigravity | `antigravity` | Local language server on 127.0.0.1 while the Antigravity app or a signed-in `agy` CLI runs |
 
 ## Settings
 

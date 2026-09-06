@@ -1,12 +1,13 @@
 .pragma library
 
 // The providers this plugin is allowed to show. IDs must match CodexBar
-// exactly: amp, codex, kimi, cursor, grok, notion, zed, factory. Adding any
-// other ID here is a product change, not a display tweak. factory displays
-// as Droid.
+// exactly: amp, antigravity, codex, kimi, cursor, grok, notion, zed, factory.
+// Adding any other ID here is a product change, not a display tweak. factory
+// displays as Droid.
 
 var SUPPORTED = [
   { id: "amp", name: "Amp", monogram: "A", dashboardUrl: "https://ampcode.com/settings/usage" },
+  { id: "antigravity", name: "Antigravity", monogram: "Ag", dashboardUrl: "" },
   { id: "codex", name: "Codex", monogram: "C", dashboardUrl: "https://chatgpt.com/codex/settings/usage" },
   { id: "kimi", name: "Kimi Code", monogram: "K", dashboardUrl: "https://www.kimi.com/code/console" },
   { id: "cursor", name: "Cursor", monogram: "Cu", dashboardUrl: "https://cursor.com/dashboard?tab=usage" },
@@ -18,6 +19,7 @@ var SUPPORTED = [
 
 var DEFAULT_PROVIDERS = {
   amp: { enabled: true },
+  antigravity: { enabled: true },
   codex: { enabled: true },
   kimi: { enabled: true },
   cursor: { enabled: true },

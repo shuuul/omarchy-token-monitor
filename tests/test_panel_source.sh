@@ -19,6 +19,7 @@ grep -Fq 'zed-github-account' collector/providers/zed.py
 
 # The supported set is closed and uses CodexBar IDs exactly.
 grep -Fq '{ id: "amp", name: "Amp"' Providers.js
+grep -Fq '{ id: "antigravity", name: "Antigravity"' Providers.js
 grep -Fq '{ id: "codex", name: "Codex"' Providers.js
 grep -Fq '{ id: "kimi", name: "Kimi Code"' Providers.js
 grep -Fq '{ id: "cursor", name: "Cursor"' Providers.js
@@ -26,17 +27,18 @@ grep -Fq '{ id: "grok", name: "Grok"' Providers.js
 grep -Fq '{ id: "notion", name: "Notion AI"' Providers.js
 grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 grep -Fq '{ id: "factory", name: "Droid"' Providers.js
-[[ "$(grep -c '{ id: "' Providers.js)" -eq 8 ]]
+[[ "$(grep -c '{ id: "' Providers.js)" -eq 9 ]]
 
 # Provider marks come from CodexBar ProviderIcon-*.svg. Qt paints currentColor
 # as black, so fills must be white for MultiEffect to tint the bar foreground.
-for id in amp codex kimi cursor grok notion zed factory; do
+for id in amp antigravity codex kimi cursor grok notion zed factory; do
   grep -Fq '#ffffff' "assets/${id}.svg"
   ! grep -Fq 'currentColor' "assets/${id}.svg"
 done
 # Distinct official marks, not the old monogram placeholders.
 ! grep -Fq 'M12 3 4 21h3.1l1.5-3.4h6.8L16.9 21H20L12 3zm0 6.2' assets/amp.svg
 grep -Fq 'M13.9197 13.61L17.3816 26.566L14.242 27.4049' assets/amp.svg
+grep -Fq 'M85.2843 88.0301' assets/antigravity.svg
 grep -Fq 'M83.7733 42.8087' assets/codex.svg
 grep -Fq 'M84.0704 28.9353L51.9066 10.4454' assets/cursor.svg
 grep -Fq 'M9.27 15.29l7.978-5.897' assets/grok.svg
