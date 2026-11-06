@@ -14,8 +14,10 @@ from collector.security import MAX_SNAPSHOT_BYTES, snapshot_json
 assert requested_providers({}, ["grok"]) == ("grok",)
 assert requested_providers({"only": "codex"}, []) == ("codex",)
 assert requested_providers({"only": "factory"}, []) == ("factory",)
+assert requested_providers({"only": "deepseek"}, []) == ("deepseek",)
+assert requested_providers({"only": "devin"}, []) == ("devin",)
 assert requested_providers({}, []) == PROVIDERS
-assert PROVIDERS[-1] == "factory"
+assert PROVIDERS[-2:] == ("deepseek", "devin")
 assert row("grok", source="chrome", error="x")["error"]["message"] == "x"
 assert len(row("grok", source="chrome", error="x" * 1000)["error"]["message"]) == 512
 assert len(snapshot_json([row("grok", source="chrome", error="x")]).encode()) <= MAX_SNAPSHOT_BYTES

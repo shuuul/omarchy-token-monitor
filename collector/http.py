@@ -15,9 +15,11 @@ CTX = ssl.create_default_context()
 ALLOWED_HTTPS_HOSTS = frozenset({
     "accounts.x.ai",
     "ampcode.com",
+    "api.deepseek.com",
     "api.factory.ai",
     "api.kimi.ai",
     "api.kimi.com",
+    "app.devin.ai",
     "app.factory.ai",
     "app.notion.com",
     "auth.kimi.ai",
@@ -27,6 +29,7 @@ ALLOWED_HTTPS_HOSTS = frozenset({
     "cloud.zed.dev",
     "cursor.com",
     "grok.com",
+    "platform.deepseek.com",
 })
 
 

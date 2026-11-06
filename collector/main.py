@@ -10,6 +10,8 @@ from collector.providers.amp import fetch_amp
 from collector.providers.antigravity import fetch_antigravity
 from collector.providers.codex import fetch_codex
 from collector.providers.cursor import fetch_cursor
+from collector.providers.deepseek import fetch_deepseek
+from collector.providers.devin import fetch_devin
 from collector.providers.factory import fetch_factory
 from collector.providers.grok import fetch_grok
 from collector.providers.kimi import fetch_kimi
@@ -18,7 +20,19 @@ from collector.providers.zed import fetch_zed
 from collector.schema import row
 from collector.security import MAX_SNAPSHOT_BYTES, snapshot_json
 
-PROVIDERS = ("amp", "antigravity", "codex", "kimi", "cursor", "grok", "notion", "zed", "factory")
+PROVIDERS = (
+    "amp",
+    "antigravity",
+    "codex",
+    "kimi",
+    "cursor",
+    "grok",
+    "notion",
+    "zed",
+    "factory",
+    "deepseek",
+    "devin",
+)
 
 def requested_providers(settings: dict, argv: list[str] | None = None) -> tuple[str, ...]:
     args = list(argv or [])
@@ -61,6 +75,8 @@ def collect(settings: dict | None = None, argv: list[str] | None = None) -> list
         "notion": lambda: fetch_notion(jars),
         "zed": lambda: fetch_zed(jars),
         "factory": lambda: fetch_factory(jars),
+        "deepseek": fetch_deepseek,
+        "devin": fetch_devin,
     }
     wanted = []
     for provider in requested_providers(settings, argv):

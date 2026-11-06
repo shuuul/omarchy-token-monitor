@@ -371,6 +371,7 @@ function iconWindows(provider) {
   var session = findWindowByTitle(windows, "Session")
     || findWindowByTitle(windows, "5h")
     || findWindowByTitle(windows, "5-hour")
+    || findWindowByTitle(windows, "Daily")
     || findWindowByTitle(windows, "Third-Party")
     || findWindowByTitle(windows, "Third-party")
     || findWindowByTitle(windows, "Third party")
@@ -568,6 +569,7 @@ function formatCredits(remaining, unit) {
   if (amount === null) return ""
   var label = String(unit || "credits")
   if (label === "usd" || label === "USD" || label === "$") return "$" + amount.toFixed(2)
+  if (label === "cny" || label === "CNY" || label === "¥") return "¥" + amount.toFixed(2)
   var rounded = Math.abs(amount - Math.round(amount)) < 0.05 ? String(Math.round(amount)) : amount.toFixed(1)
   return rounded + " " + label
 }
@@ -731,6 +733,13 @@ function prettyPlanPart(providerId, raw) {
       team_annual: "Team Annual",
       enterprise: "Enterprise",
       factory_pro_annual_plan: "Factory Pro Annual Plan"
+    },
+    devin: {
+      free: "Free",
+      core: "Core",
+      pro: "Pro",
+      team: "Team",
+      enterprise: "Enterprise"
     }
   }
   var mapped = maps[id] && maps[id][key]

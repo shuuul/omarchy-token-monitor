@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "shuuul",
   "license": "MIT",
-  "description": "Amp, Antigravity, Codex, Kimi Code, Cursor, Grok, Notion AI, Zed, and Droid quotas in the Omarchy bar.",
+  "description": "Amp, Antigravity, Codex, Kimi Code, Cursor, Grok, Notion AI, Zed, Droid, DeepSeek, and Devin quotas in the Omarchy bar.",
   "kinds": ["bar-widget"],
   "activation": "on-demand",
   "entryPoints": {
@@ -27,7 +27,9 @@
       "notion",
       "zed",
       "factory",
-      "droid"
+      "droid",
+      "deepseek",
+      "devin"
     ],
     "allowMultiple": false,
     "defaultSection": "right",
@@ -47,7 +49,9 @@
         "grok": { "enabled": true },
         "notion": { "enabled": true },
         "zed": { "enabled": true },
-        "factory": { "enabled": true }
+        "factory": { "enabled": true },
+        "deepseek": { "enabled": true },
+        "devin": { "enabled": true }
       }
     },
     "schema": [

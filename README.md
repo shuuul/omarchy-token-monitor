@@ -1,7 +1,7 @@
 # Token Monitor for Omarchy
 
 An Omarchy bar panel for AI coding quotas: Amp, Antigravity, Codex, Kimi Code,
-Cursor, Grok, Notion AI, Zed, and Droid.
+Cursor, Grok, Notion AI, Zed, Droid, DeepSeek, and Devin.
 
 Use it to see remaining weekly and session usage next to the selected provider
 icon, open a panel for the supported accounts, and refresh one provider
@@ -40,8 +40,11 @@ agy
 Sign in to cursor.com, app.notion.com, and grok.com in Chrome. Zed uses the
 desktop client's Linux keyring item after `client: sign in`. Droid uses the
 local `droid` login, `FACTORY_API_KEY` / `~/.factory/.env`, or app.factory.ai
-Chrome cookies. Antigravity needs the desktop app open or a signed-in `agy`
-CLI running; the panel reads usage from its local language server.
+Chrome cookies. DeepSeek uses `DEEPSEEK_API_KEY` (or a Platform token). Devin
+uses a manual bearer plus organization from the environment or
+`~/.config/codexbar/config.json`. Antigravity needs the desktop app open or a
+signed-in `agy` CLI running; the panel reads usage from its local language
+server.
 
 Install the Omarchy plugin:
 
@@ -107,6 +110,9 @@ another host. It never sends one provider's credentials to another provider.
 | Notion `token_v2` cookie | `app.notion.com` |
 | Zed keyring user ID and token | `cloud.zed.dev` |
 | Droid API key, CLI token, or Factory cookies | `api.factory.ai` and `app.factory.ai` |
+| DeepSeek API key | `api.deepseek.com` |
+| DeepSeek Platform token | `platform.deepseek.com` |
+| Devin bearer token and organization | `app.devin.ai` |
 | Antigravity — no credential; quota requests carry only the app's local CSRF token | Loopback only: `127.0.0.1:<port>` language server |
 
 The Chrome Safe Storage password, Factory decryption key, and local auth files
@@ -134,6 +140,8 @@ and the JSON stream retained by QML is limited to 64 KiB.
 | Notion AI | `notion` | Chrome cookie `token_v2` |
 | Zed | `zed` | Linux keyring item `zed-github-account` |
 | Droid | `factory` | `droid` CLI keyring, `FACTORY_API_KEY`, or Chrome cookies |
+| DeepSeek | `deepseek` | `DEEPSEEK_API_KEY`, or Platform token via env / CodexBar config |
+| Devin | `devin` | Manual bearer + org via env or CodexBar `cookieSource: "manual"` |
 | Antigravity | `antigravity` | Local language server on 127.0.0.1 while the Antigravity app or a signed-in `agy` CLI runs |
 
 ## Settings
@@ -161,7 +169,9 @@ omarchy bar set shuuul.token-monitor providers '{
   "grok": { "enabled": false },
   "notion": { "enabled": false },
   "zed": { "enabled": true },
-  "factory": { "enabled": true }
+  "factory": { "enabled": true },
+  "deepseek": { "enabled": true },
+  "devin": { "enabled": true }
 }' --json
 ```
 
@@ -205,5 +215,5 @@ To add a provider:
 
 ## License
 
-MIT. CodexBar, Amp, Codex, Kimi, Cursor, Grok, Notion, Zed, and Factory Droid
-are separate products under their own licenses.
+MIT. CodexBar, Amp, Codex, Kimi, Cursor, Grok, Notion, Zed, Factory Droid,
+DeepSeek, and Devin are separate products under their own licenses.

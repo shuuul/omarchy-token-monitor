@@ -1,9 +1,9 @@
 .pragma library
 
 // The providers this plugin is allowed to show. IDs must match CodexBar
-// exactly: amp, antigravity, codex, kimi, cursor, grok, notion, zed, factory.
-// Adding any other ID here is a product change, not a display tweak. factory
-// displays as Droid.
+// exactly: amp, antigravity, codex, kimi, cursor, grok, notion, zed, factory,
+// deepseek, devin. Adding any other ID here is a product change, not a
+// display tweak. factory displays as Droid.
 
 var SUPPORTED = [
   { id: "amp", name: "Amp", monogram: "A", dashboardUrl: "https://ampcode.com/settings/usage" },
@@ -14,7 +14,9 @@ var SUPPORTED = [
   { id: "grok", name: "Grok", monogram: "G", dashboardUrl: "https://grok.com/?_s=usage" },
   { id: "notion", name: "Notion AI", monogram: "N", dashboardUrl: "https://app.notion.com/" },
   { id: "zed", name: "Zed", monogram: "Z", dashboardUrl: "" },
-  { id: "factory", name: "Droid", monogram: "D", dashboardUrl: "https://app.factory.ai/settings/billing" }
+  { id: "factory", name: "Droid", monogram: "D", dashboardUrl: "https://app.factory.ai/settings/billing" },
+  { id: "deepseek", name: "DeepSeek", monogram: "DS", dashboardUrl: "https://platform.deepseek.com/usage" },
+  { id: "devin", name: "Devin", monogram: "Dv", dashboardUrl: "https://app.devin.ai/settings/usage" }
 ]
 
 var DEFAULT_PROVIDERS = {
@@ -26,7 +28,9 @@ var DEFAULT_PROVIDERS = {
   grok: { enabled: true },
   notion: { enabled: true },
   zed: { enabled: true },
-  factory: { enabled: true }
+  factory: { enabled: true },
+  deepseek: { enabled: true },
+  devin: { enabled: true }
 }
 
 function catalog() {

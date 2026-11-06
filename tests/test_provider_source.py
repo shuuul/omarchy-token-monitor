@@ -21,4 +21,8 @@ assert "zed-github-account" in source
 assert "api.factory.ai/api/billing/limits" in source
 assert "Factory CLI" in source
 assert "auth.v2.keyring" in source
+assert "app.devin.ai" in source
+assert "billing/quota/usage" in source
+assert "api.deepseek.com/user/balance" in source
+assert "platform.deepseek.com/api/v0/users/get_user_summary" in source
 print("collector source tests passed")

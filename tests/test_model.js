@@ -116,7 +116,7 @@ const rows = model.providersFromSnapshot(
   Array.from(providers.enabledIds({})),
   providers.catalog(),
 )
-assert.strictEqual(rows.length, 9)
+assert.strictEqual(rows.length, 11)
 const orderedRows = model.providersFromSnapshot(
   parsed,
   Array.from(providers.enabledIds({ providerOrder: ["factory", "cursor", "codex"] })),
@@ -282,6 +282,36 @@ assert.strictEqual(model.prettyPlan("notion", "business"), "Business")
 assert.strictEqual(model.prettyPlan("cursor", "pro_plus"), "Pro+")
 assert.strictEqual(model.prettyPlan("zed", "zed_student"), "Student")
 assert.strictEqual(model.prettyPlan("factory", "team_annual"), "Team Annual")
+assert.strictEqual(model.prettyPlan("devin", "pro"), "Pro")
+assert.strictEqual(model.prettyPlan("devin", "enterprise"), "Enterprise")
+const devinWindows = {
+  windows: [
+    { title: "Daily", usedPercent: 25 },
+    { title: "Weekly", usedPercent: 40 }
+  ]
+}
+const devinIcon = model.iconWindows(devinWindows)
+assert.strictEqual(devinIcon.weeklyRemaining, 60)
+assert.strictEqual(devinIcon.sessionRemaining, 75)
+const deepseekSnapshot = {
+  providers: [{
+    provider: "deepseek",
+    usage: {
+      loginMethod: "API key",
+      identity: { providerID: "deepseek", plan: "API key" },
+      updatedAt: "2026-11-06T00:00:00Z"
+    },
+    credits: { remaining: 50, unit: "usd", label: "Balance" },
+    pace: { primary: { summary: "$50.00 (Paid: $40.00 / Granted: $10.00)" } }
+  }]
+}
+const deepseekRows = model.providersFromSnapshot(deepseekSnapshot, ["deepseek"], providers.catalog())
+assert.strictEqual(deepseekRows[0].creditsLabel, "Balance")
+assert.strictEqual(deepseekRows[0].creditsRemaining, 50)
+assert.strictEqual(deepseekRows[0].paceSummary, "$50.00 (Paid: $40.00 / Granted: $10.00)")
+const deepseekIcon = model.iconWindows(deepseekRows[0])
+assert.strictEqual(deepseekIcon.weeklyRemaining, null)
+assert.strictEqual(deepseekIcon.sessionRemaining, null)
 assert.strictEqual(model.heroMeta(codex), "Plus · user@example.com")
 assert.strictEqual(model.heroMeta(codex, { hideEmail: true }), "Plus")
 assert.strictEqual(model.hideEmail({}), false)

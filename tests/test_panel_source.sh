@@ -27,11 +27,13 @@ grep -Fq '{ id: "grok", name: "Grok"' Providers.js
 grep -Fq '{ id: "notion", name: "Notion AI"' Providers.js
 grep -Fq '{ id: "zed", name: "Zed"' Providers.js
 grep -Fq '{ id: "factory", name: "Droid"' Providers.js
-[[ "$(grep -c '{ id: "' Providers.js)" -eq 9 ]]
+grep -Fq '{ id: "deepseek", name: "DeepSeek"' Providers.js
+grep -Fq '{ id: "devin", name: "Devin"' Providers.js
+[[ "$(grep -c '{ id: "' Providers.js)" -eq 11 ]]
 
 # Provider marks come from CodexBar ProviderIcon-*.svg. Qt paints currentColor
 # as black, so fills must be white for MultiEffect to tint the bar foreground.
-for id in amp antigravity codex kimi cursor grok notion zed factory; do
+for id in amp antigravity codex kimi cursor grok notion zed factory deepseek devin; do
   grep -Fq '#ffffff' "assets/${id}.svg"
   ! grep -Fq 'currentColor' "assets/${id}.svg"
 done
@@ -46,6 +48,8 @@ grep -Fq 'M21.7202 0.939941' assets/kimi.svg
 grep -Fq 'M15.257.055l-13.31.98' assets/notion.svg
 grep -Fq 'M2.25 1.5a.75.75 0 0 0-.75.75v16.5H0V2.25' assets/zed.svg
 grep -Fq 'M67.8515 23.9286C67.6213 23.8754' assets/factory.svg
+grep -Fq 'M27.501 8.46875C27.249 8.3457' assets/deepseek.svg
+grep -Fq 'M23 48.6315V29.1756C23 28.3205' assets/devin.svg
 
 # Panel wiring follows the Omarchy agents / clock contract.
 grep -Fq 'text: modelData.name' Panel.qml
@@ -66,6 +70,8 @@ grep -Fq 'dashboardUrl: "https://cursor.com/dashboard?tab=usage"' Providers.js
 grep -Fq 'dashboardUrl: "https://grok.com/?_s=usage"' Providers.js
 grep -Fq 'dashboardUrl: "https://app.notion.com/"' Providers.js
 grep -Fq 'dashboardUrl: "https://app.factory.ai/settings/billing"' Providers.js
+grep -Fq 'dashboardUrl: "https://platform.deepseek.com/usage"' Providers.js
+grep -Fq 'dashboardUrl: "https://app.devin.ai/settings/usage"' Providers.js
 grep -Fq 'text: "Extra usage"' Panel.qml
 grep -Fq 'tooltipText: "Settings"' Panel.qml
 grep -Fq 'Refresh interval' Panel.qml
